@@ -1,0 +1,43 @@
+{
+  "name": "backend",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "description": "",
+  "license": "AGPL-3.0-only",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "build": "bun run bun.build.ts",
+    "test": "cross-env NODE_ENV=test vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:check": "drizzle-kit check",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "catalog:",
+    "@ai-sdk/openai-compatible": "catalog:",
+    "@hono/zod-openapi": "catalog:",
+    "@scalar/hono-api-reference": "catalog:",
+    "ai": "catalog:",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "dotenv-expand": "catalog:",
+    "drizzle-orm": "catalog:",
+    "drizzle-zod": "catalog:",
+    "es-toolkit": "catalog:",
+    "hono": "catalog:",
+    "hono-pino": "catalog:",
+    "pino": "catalog:",
+    "pino-pretty": "catalog:",
+    "pino-roll": "catalog:",
+    "stoker": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "drizzle-kit": "catalog:",
+    "vitest": "catalog:"
+  }
+}

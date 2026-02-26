@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "lib": ["ESNext"],
+    "moduleDetection": "force",
+    "baseUrl": ".",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "downlevelIteration": true,
+    "noEmit": true,
+    "outDir": "dist",
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src",
+    "bun.build.ts",
+    "vitest.config.ts",
+    "drizzle.config.ts",
+    "scripts"
+  ]
+}

@@ -3,6 +3,9 @@ import { drizzle } from "drizzle-orm/bun-sql";
 
 import env from "@/env";
 import * as schemas from "./schemas";
+import { ensureLocalSqliteDir } from "./sqlite-path";
+
+ensureLocalSqliteDir(env.DATABASE_URL);
 
 const client = new SQL(env.DATABASE_URL);
 

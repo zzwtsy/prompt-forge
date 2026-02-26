@@ -15,7 +15,7 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   emailAndPassword: {
     enabled: true,
-    disableSignUp: true,
+    disableSignUp: env.DISABLE_SIGN_UP,
   },
   // 允许跨域携带凭证访问的来源白名单( 避免 CSRF/滥用)
   trustedOrigins: env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",").map(s => s.trim()).filter(Boolean),

@@ -4,6 +4,8 @@ import { config } from "dotenv";
 import { expand } from "dotenv-expand";
 import * as z from "zod";
 
+import { isLocalSqliteDatabaseUrl } from "@/db/sqlite-path";
+
 // 注意：测试环境优先读取 .env.test，避免污染开发/生产配置。
 const ENV_FILE_NAME = process.env.NODE_ENV === "test" ? ".env.test" : ".env";
 const ENV_FILE_HINT = path.posix.join(process.cwd(), ENV_FILE_NAME);
@@ -29,7 +31,10 @@ const EnvSchema = z.object({
   LOG_REMOVE_OTHER_FILES: z.coerce.boolean().default(false),
 
   // --- 数据库相关配置 ---
-  DATABASE_URL: z.string(),
+  DATABASE_URL: z.string().refine(
+    isLocalSqliteDatabaseUrl,
+    { message: "仅支持本地 SQLite 文件路径，例如 file:prompt-forge-data/data.db" },
+  ),
 
   // --- Better Auth 相关配置 ---
   /** 认证服务的密钥, 长度必须至少 32 位 */

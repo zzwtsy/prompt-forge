@@ -9,6 +9,7 @@
     "dev": "bun run --hot src/index.ts",
     "build": "bun run bun.build.ts",
     "test": "cross-env NODE_ENV=test vitest",
+    "db:auth:generate": "npx @better-auth/cli@latest generate --config better-auth.config.ts --output src/db/schemas/auth-schema.ts --yes",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
     "db:migrate": "drizzle-kit migrate",

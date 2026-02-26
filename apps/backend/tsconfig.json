@@ -25,6 +25,7 @@
     "bun.build.ts",
     "vitest.config.ts",
     "drizzle.config.ts",
+    "better-auth.config.ts",
     "scripts"
   ]
 }

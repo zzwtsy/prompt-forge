@@ -29,7 +29,7 @@ const EnvSchema = z.object({
   LOG_REMOVE_OTHER_FILES: z.coerce.boolean().default(false),
 
   // --- 数据库相关配置 ---
-  DATABASE_URL: z.url(),
+  DATABASE_URL: z.string(),
 
   // --- Better Auth 相关配置 ---
   /** 认证服务的密钥, 长度必须至少 32 位 */

@@ -1,10 +1,5 @@
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-
-/** 业务错误描述结构。 */
-export interface ErrorDescriptor {
-  code: number;
-  message: string;
-}
+import type { ErrorDescriptor } from "./codes";
 
 /**
  * 应用统一业务错误类型。
@@ -18,14 +13,14 @@ export class AppError extends Error {
 
   /**
    * @param descriptor 错误码与默认文案。
+   * @param status HTTP 状态码（必填，不从 `code` 反推）。
    * @param message 可选覆盖消息。
-   * @param status HTTP 状态码，默认 400。
    * @param details 结构化错误详情（用于日志或调试）。
    */
   constructor(
     descriptor: ErrorDescriptor,
+    status: ContentfulStatusCode,
     message?: string,
-    status: ContentfulStatusCode = 400,
     details?: unknown,
   ) {
     super(message ?? descriptor.message);

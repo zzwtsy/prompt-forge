@@ -9,8 +9,8 @@ import { z } from "@hono/zod-openapi";
 export const ApiErrorSchema = z.object({
   success: z.literal(false).openapi({ example: false }),
   error: z.object({
-    code: z.number().openapi({ example: 400 }),
-    message: z.string().openapi({ example: "Bad Request" }),
+    code: z.number().openapi({ example: 40401 }),
+    message: z.string().openapi({ example: "资源不存在" }),
     details: z.unknown().optional(),
   }),
   requestId: z.string().optional().openapi({ example: "req_123" }),

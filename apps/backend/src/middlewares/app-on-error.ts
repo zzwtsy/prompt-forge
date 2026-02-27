@@ -2,11 +2,26 @@ import type { ErrorHandler } from "hono";
 import type { AppBindings } from "@/lib/types";
 
 import { HTTPException } from "hono/http-exception";
-import { INTERNAL_SERVER_ERROR, OK } from "stoker/http-status-codes";
+import { FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED, UNPROCESSABLE_ENTITY } from "stoker/http-status-codes";
 import env from "@/env";
 import { AppError } from "@/lib/errors";
 import { AppErrorCode } from "@/lib/errors/codes";
 import { fail } from "@/lib/utils/http";
+
+function getMappedErrorDescriptor(statusCode: number) {
+  switch (statusCode) {
+    case UNAUTHORIZED:
+      return AppErrorCode.UNAUTHORIZED;
+    case FORBIDDEN:
+      return AppErrorCode.FORBIDDEN;
+    case NOT_FOUND:
+      return AppErrorCode.NOT_FOUND;
+    case UNPROCESSABLE_ENTITY:
+      return AppErrorCode.VALIDATION_ERROR;
+    default:
+      return undefined;
+  }
+}
 
 /**
  * 全局错误处理中间件。
@@ -19,6 +34,7 @@ export const appOnError: ErrorHandler<AppBindings> = (err, c) => {
   const currentStatus = "status" in err ? err.status : c.newResponse(null).status;
   // 注意：部分异常默认 status 可能是 200，这里统一纠正为 500，避免错误被误报为成功。
   const statusCode = currentStatus !== OK ? (currentStatus as any) : INTERNAL_SERVER_ERROR;
+  const developmentStack = env.NODE_ENV === "development" ? err.stack : undefined;
 
   c.var.logger.error({
     err,
@@ -38,18 +54,30 @@ export const appOnError: ErrorHandler<AppBindings> = (err, c) => {
   }
 
   if (err instanceof HTTPException) {
+    const descriptor = getMappedErrorDescriptor(err.status) ?? AppErrorCode.HTTP_ERROR;
     return fail(c, {
-      code: AppErrorCode.HTTP_ERROR.code,
-      message: err.message,
+      code: descriptor.code,
+      message: descriptor.message,
       status: err.status,
     });
   }
 
+  if (statusCode === INTERNAL_SERVER_ERROR) {
+    return fail(c, {
+      code: AppErrorCode.SYSTEM_ERROR.code,
+      message: AppErrorCode.SYSTEM_ERROR.message,
+      status: statusCode,
+      // 注意：仅开发环境返回堆栈，避免生产环境泄露内部实现细节。
+      details: developmentStack,
+    });
+  }
+
+  const descriptor = getMappedErrorDescriptor(statusCode) ?? AppErrorCode.HTTP_ERROR;
   return fail(c, {
-    code: AppErrorCode.SYSTEM_ERROR.code,
-    message: statusCode === INTERNAL_SERVER_ERROR ? AppErrorCode.SYSTEM_ERROR.message : err.message,
+    code: descriptor.code,
+    message: descriptor.message,
     status: statusCode,
     // 注意：仅开发环境返回堆栈，避免生产环境泄露内部实现细节。
-    details: env.NODE_ENV === "development" ? err.stack : undefined,
+    details: developmentStack,
   });
 };

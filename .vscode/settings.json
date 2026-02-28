@@ -54,7 +54,7 @@
     "strings": "on"
   },
   "typescript.tsdk": "node_modules/typescript/lib",
-    "files.readonlyInclude": {
+  "files.readonlyInclude": {
     "**/routeTree.gen.ts": true
   },
   "files.watcherExclude": {

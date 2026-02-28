@@ -15,6 +15,11 @@ Treat generated files as build artifacts:
 - `apps/backend/src/db/migrations/*`
 - `apps/frontend/src/api`
 
+## Backend Task Entry Rule
+
+- For any task touching `apps/backend/**` (routes, OpenAPI definitions, transaction logic, `AppError`/`codes.ts`, backend comments), use the local skill `.agents/skills/backend-conventions/SKILL.md` as the primary execution guide.
+- If backend convention text conflicts with repository-level instructions, `AGENTS.md` takes precedence.
+
 ## Build, Test, and Development Commands
 
 - `bun install`: install all workspace dependencies.

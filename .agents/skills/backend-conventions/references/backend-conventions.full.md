@@ -1,5 +1,13 @@
 # Backend 开发规范
 
+## 同步元信息
+
+- 规范版本：`v1.1.0`
+- skill 同步版本号：`v1.1.0`
+- skill 最近同步日期：`2026-02-28`
+- 最近同步日期：`2026-02-28`
+- 同步责任人：`@backend-maintainers`
+
 ## 文档定位
 
 - 本文档用于约束 `apps/backend/src` 的路由组织、OpenAPI 写法、事务策略与注释规范。
@@ -36,8 +44,10 @@ src/routes/{module}/
 统一约束：
 
 - `tags` 必须使用大驼峰且不留空格，例如 `["ModelSettings"]`、`["PromptOptimize"]`。
-- `request` / `responses` 优先使用 `stoker/openapi/helpers` 的 `jsonContent`、`jsonContentRequired`。
-- 统一复用项目封装的 `jsonApiContent`、`jsonApiError`（按场景使用）。
+- `request.body` 优先使用 `stoker/openapi/helpers` 的 `jsonContentRequired`。
+- `responses` 按场景选择：
+  - 场景 A（默认）：handler 使用 `ok/fail` 标准响应包裹时，统一使用 `jsonApiContent`、`jsonApiError`。
+  - 场景 B（例外）：返回非标准响应结构（例如第三方回调透传、历史兼容原始结构）时可使用 `jsonContent`，且必须在代码中注释说明原因。
 - 接口说明统一中文，包括请求体说明、响应说明、错误说明。
 - 中间件统一放在 `createRoute({ middleware: [...] })` 中。
 
@@ -63,9 +73,9 @@ import { HttpStatusCodes } from "stoker/http-status-codes";
 ```ts
 import { createRoute, z } from "@hono/zod-openapi";
 import * as HttpStatusCodes from "stoker/http-status-codes";
-import { jsonContent, jsonContentRequired } from "stoker/openapi/helpers";
+import { jsonContentRequired } from "stoker/openapi/helpers";
 
-import { jsonApiError } from "@/lib/openapi/helpers";
+import { jsonApiContent, jsonApiError } from "@/lib/openapi/helpers";
 import { requireAuth } from "@/middlewares/require-permission";
 
 const tags = ["ModelSettings"];
@@ -89,9 +99,34 @@ export const createProviderRoute = createRoute({
     body: jsonContentRequired(CreateProviderBodySchema, "创建 OpenAI Compatible 服务商请求参数"),
   },
   responses: {
-    [HttpStatusCodes.OK]: jsonContent(CreateProviderResponseSchema, "创建服务商成功"),
+    [HttpStatusCodes.OK]: jsonApiContent(CreateProviderResponseSchema, "创建服务商成功"),
     [HttpStatusCodes.UNAUTHORIZED]: jsonApiError("未登录或登录已失效"),
     [HttpStatusCodes.UNPROCESSABLE_ENTITY]: jsonApiError("请求参数校验失败"),
+  },
+});
+```
+
+场景 B 示例（允许使用 `jsonContent`）：
+
+```ts
+import { createRoute, z } from "@hono/zod-openapi";
+import * as HttpStatusCodes from "stoker/http-status-codes";
+import { jsonContent } from "stoker/openapi/helpers";
+
+const tags = ["WebhookCallback"];
+
+const RawWebhookSchema = z.object({
+  event: z.string(),
+  payload: z.unknown(),
+});
+
+export const receiveWebhookRoute = createRoute({
+  path: "/api/webhook/raw",
+  method: "post",
+  tags,
+  responses: {
+    // 场景 B：此接口按第三方 webhook 协议返回原始结构，不走统一 success 包裹。
+    [HttpStatusCodes.OK]: jsonContent(RawWebhookSchema, "第三方 webhook 原始响应"),
   },
 });
 ```

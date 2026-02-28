@@ -22,7 +22,7 @@ const ModelItemSchema = z.object({
   displayName: z.string().nullable(),
   enabled: z.boolean(),
   source: z.enum(["sync", "manual"]),
-  lastSyncedAt: z.string().datetime().nullable(),
+  lastSyncedAt: z.iso.datetime().nullable(),
 });
 
 const ProviderItemSchema = z.object({

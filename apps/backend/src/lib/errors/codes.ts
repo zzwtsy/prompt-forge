@@ -53,6 +53,78 @@ export const AppErrorCode = {
    */
   FORBIDDEN: { code: 40301, message: "无权限访问" },
 
+  /**
+   * 服务商未启用
+   * - 场景: 运行时解析模型时 provider.enabled = false
+   * - 对应 HTTP: 422
+   * - details 对外: 否
+   */
+  PROVIDER_DISABLED: { code: 22001, message: "服务商已禁用" },
+
+  /**
+   * 模型未启用
+   * - 场景: 运行时解析模型时 model.enabled = false
+   * - 对应 HTTP: 422
+   * - details 对外: 否
+   */
+  MODEL_DISABLED: { code: 22002, message: "模型已禁用" },
+
+  /**
+   * 默认模型未设置
+   * - 场景: 评估/优化请求未显式指定 modelId 且默认模型为空
+   * - 对应 HTTP: 422
+   * - details 对外: 否
+   */
+  DEFAULT_MODEL_NOT_SET: { code: 22003, message: "默认模型未设置" },
+
+  /**
+   * 默认模型不可用
+   * - 场景: 默认模型不存在、状态非法或关联配置损坏
+   * - 对应 HTTP: 422
+   * - details 对外: 否
+   */
+  DEFAULT_MODEL_INVALID: { code: 22004, message: "默认模型不可用，请先修复模型设置" },
+
+  /**
+   * 服务商 API Key 缺失
+   * - 场景: 运行时调用或模型同步前未配置 API Key
+   * - 对应 HTTP: 422
+   * - details 对外: 否
+   */
+  PROVIDER_API_KEY_MISSING: { code: 22005, message: "服务商 API Key 未配置" },
+
+  /**
+   * 模型冲突
+   * - 场景: 手动新增模型时命中 providerId+modelName 唯一约束
+   * - 对应 HTTP: 422
+   * - details 对外: 否
+   */
+  MODEL_CONFLICT: { code: 22006, message: "模型已存在，不能重复创建" },
+
+  /**
+   * 服务商不存在
+   * - 场景: 通过 providerId 查询失败
+   * - 对应 HTTP: 404
+   * - details 对外: 否
+   */
+  PROVIDER_NOT_FOUND: { code: 42001, message: "服务商不存在" },
+
+  /**
+   * 模型不存在
+   * - 场景: 通过 modelId 查询失败
+   * - 对应 HTTP: 404
+   * - details 对外: 否
+   */
+  MODEL_NOT_FOUND: { code: 42002, message: "模型不存在" },
+
+  /**
+   * 模型同步失败
+   * - 场景: 拉取上游模型列表时外部请求失败
+   * - 对应 HTTP: 502
+   * - details 对外: 否
+   */
+  MODEL_SYNC_FAILED: { code: 52001, message: "模型同步失败，请稍后重试" },
+
 } as const satisfies Record<string, ErrorDescriptor>;
 
 /** 提取 Key 的联合类型: "SYSTEM_ERROR" | "VALIDATION_ERROR" | ... */

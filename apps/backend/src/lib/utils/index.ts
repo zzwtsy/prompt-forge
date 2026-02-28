@@ -1,5 +1,4 @@
-import type { SQL } from "drizzle-orm";
-import type { PgInsertOnConflictDoUpdateConfig, PgInsertValue, PgTable } from "drizzle-orm/pg-core";
+import type { SQL, Table } from "drizzle-orm";
 import { getTableColumns, sql } from "drizzle-orm";
 import { chunk } from "es-toolkit";
 import db from "@/db";
@@ -24,7 +23,7 @@ import db from "@/db";
  * await db.insert(users).values({id: 1, name: 'John', email: 'john@example.com'})
  *   .onConflictDoUpdate({ target: users.id, set: updateColumns });
  */
-export function buildConflictUpdateColumns<T extends PgTable, Q extends keyof T["_"]["columns"]>(table: T, columns: Q[]) {
+export function buildConflictUpdateColumns<T extends Table, Q extends keyof T["_"]["columns"] & string>(table: T, columns: Q[]) {
   const cls = getTableColumns(table);
   return columns.reduce((acc, column) => {
     const col = cls[column];
@@ -53,7 +52,7 @@ export function buildConflictUpdateColumns<T extends PgTable, Q extends keyof T[
  * await db.insert(users).values({id: 1, name: 'John', email: 'john@example.com', createdAt: new Date()})
  *   .onConflictDoUpdate({ target: users.id, set: updateColumns });
  */
-export function buildConflictUpdateColumnsExclude<T extends PgTable, Q extends keyof T["_"]["columns"]>(table: T, columns: Q[]) {
+export function buildConflictUpdateColumnsExclude<T extends Table, Q extends keyof T["_"]["columns"] & string>(table: T, columns: Q[]) {
   const cls = getTableColumns(table);
 
   return Object.keys(cls).filter(c => !columns.includes(c as Q)).reduce((acc, column) => {
@@ -83,9 +82,9 @@ export function buildConflictUpdateColumnsExclude<T extends PgTable, Q extends k
  * // 插入大量业务订单数据
  * await drizzleBatchInsert(db, businessOrders, validOrders);
  */
-export async function drizzleBatchInsert<TTable extends PgTable>(
+export async function drizzleBatchInsert<TTable extends Table>(
   table: TTable,
-  data: PgInsertValue<TTable>[],
+  data: any[],
   options: { batchSize?: number } = {},
 ) {
   const { batchSize = 100 } = options;
@@ -126,11 +125,11 @@ export async function drizzleBatchInsert<TTable extends PgTable>(
  *   }
  * );
  */
-export async function drizzleBatchUpsert<TTable extends PgTable>(
+export async function drizzleBatchUpsert<TTable extends Table>(
   table: TTable,
-  data: PgInsertValue<TTable>[],
+  data: any[],
   onConflictConfig:
-    | { type: "update"; config: PgInsertOnConflictDoUpdateConfig<any> }
+    | { type: "update"; config: any }
     | { type: "nothing"; config?: { target?: any; where?: SQL } },
   options: { batchSize?: number } = {},
 ) {

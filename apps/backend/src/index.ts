@@ -4,8 +4,12 @@ import process from "node:process";
 
 import app from "@/app";
 
+import { ensureModelSettingsSeed } from "@/db/seeds/model-settings-seed";
 import env from "@/env";
 import { logger } from "@/lib/logger";
+
+// eslint-disable-next-line antfu/no-top-level-await
+await ensureModelSettingsSeed();
 
 const server = Bun.serve({
   fetch: app.fetch,

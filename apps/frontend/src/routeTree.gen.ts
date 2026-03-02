@@ -9,38 +9,85 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkbenchRouteImport } from './routes/_workbench'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WorkbenchOptimizeRouteImport } from './routes/_workbench.optimize'
+import { Route as WorkbenchModelsRouteImport } from './routes/_workbench.models'
+import { Route as WorkbenchHistoryRouteImport } from './routes/_workbench.history'
 
+const WorkbenchRoute = WorkbenchRouteImport.update({
+  id: '/_workbench',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WorkbenchOptimizeRoute = WorkbenchOptimizeRouteImport.update({
+  id: '/optimize',
+  path: '/optimize',
+  getParentRoute: () => WorkbenchRoute,
+} as any)
+const WorkbenchModelsRoute = WorkbenchModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
+  getParentRoute: () => WorkbenchRoute,
+} as any)
+const WorkbenchHistoryRoute = WorkbenchHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => WorkbenchRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/history': typeof WorkbenchHistoryRoute
+  '/models': typeof WorkbenchModelsRoute
+  '/optimize': typeof WorkbenchOptimizeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/history': typeof WorkbenchHistoryRoute
+  '/models': typeof WorkbenchModelsRoute
+  '/optimize': typeof WorkbenchOptimizeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_workbench': typeof WorkbenchRouteWithChildren
+  '/_workbench/history': typeof WorkbenchHistoryRoute
+  '/_workbench/models': typeof WorkbenchModelsRoute
+  '/_workbench/optimize': typeof WorkbenchOptimizeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/history' | '/models' | '/optimize'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/history' | '/models' | '/optimize'
+  id:
+    | '__root__'
+    | '/'
+    | '/_workbench'
+    | '/_workbench/history'
+    | '/_workbench/models'
+    | '/_workbench/optimize'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  WorkbenchRoute: typeof WorkbenchRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_workbench': {
+      id: '/_workbench'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof WorkbenchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +95,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_workbench/optimize': {
+      id: '/_workbench/optimize'
+      path: '/optimize'
+      fullPath: '/optimize'
+      preLoaderRoute: typeof WorkbenchOptimizeRouteImport
+      parentRoute: typeof WorkbenchRoute
+    }
+    '/_workbench/models': {
+      id: '/_workbench/models'
+      path: '/models'
+      fullPath: '/models'
+      preLoaderRoute: typeof WorkbenchModelsRouteImport
+      parentRoute: typeof WorkbenchRoute
+    }
+    '/_workbench/history': {
+      id: '/_workbench/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof WorkbenchHistoryRouteImport
+      parentRoute: typeof WorkbenchRoute
+    }
   }
 }
 
+interface WorkbenchRouteChildren {
+  WorkbenchHistoryRoute: typeof WorkbenchHistoryRoute
+  WorkbenchModelsRoute: typeof WorkbenchModelsRoute
+  WorkbenchOptimizeRoute: typeof WorkbenchOptimizeRoute
+}
+
+const WorkbenchRouteChildren: WorkbenchRouteChildren = {
+  WorkbenchHistoryRoute: WorkbenchHistoryRoute,
+  WorkbenchModelsRoute: WorkbenchModelsRoute,
+  WorkbenchOptimizeRoute: WorkbenchOptimizeRoute,
+}
+
+const WorkbenchRouteWithChildren = WorkbenchRoute._addFileChildren(
+  WorkbenchRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  WorkbenchRoute: WorkbenchRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

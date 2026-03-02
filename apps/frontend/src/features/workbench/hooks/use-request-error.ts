@@ -12,10 +12,11 @@ import {
 interface UseRequestErrorOptions {
   showNotice: (input: NoticeInput) => void;
   navigateToTab: (tab: WorkbenchTab) => void;
+  redirectToLogin: () => void;
 }
 
 export function useRequestError(options: UseRequestErrorOptions) {
-  const { showNotice, navigateToTab } = options;
+  const { showNotice, navigateToTab, redirectToLogin } = options;
 
   const handleRequestError = useCallback((error: unknown, requestOptions: RequestErrorOptions) => {
     const normalized = normalizeClientError(error);
@@ -24,12 +25,8 @@ export function useRequestError(options: UseRequestErrorOptions) {
       requestOptions.onValidationError(extractValidationFieldPaths(normalized.details));
     }
 
-    if (normalized.code === 40101) {
-      showNotice({
-        tone: "error",
-        title: "登录状态已失效",
-        message: "当前会话不可用，请重新登录后再重试当前操作。",
-      });
+    if (normalized.code === 40101 || normalized.code === 40301) {
+      redirectToLogin();
       return;
     }
 
@@ -78,7 +75,7 @@ export function useRequestError(options: UseRequestErrorOptions) {
       title: requestOptions.fallbackTitle,
       message: normalized.message,
     });
-  }, [navigateToTab, showNotice]);
+  }, [navigateToTab, redirectToLogin, showNotice]);
 
   return {
     handleRequestError,

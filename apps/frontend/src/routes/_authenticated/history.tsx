@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_workbench/history")({
+export const Route = createFileRoute("/_authenticated/history")({
   component: () => null,
 });

@@ -1,39 +1,18 @@
-/* eslint-disable react-refresh/only-export-components */
-import type {
-  GlobalNotice,
-  ModelDefaultsData,
-  NoticeInput,
-  ProviderItem,
-  WorkbenchTab,
-} from "@/features/workbench/types";
-import {
-  createFileRoute,
-  Link,
-  useLocation,
-  useNavigate,
-} from "@tanstack/react-router";
+import type { GlobalNotice, ModelDefaultsData, NoticeInput, ProviderItem, WorkbenchTab } from "@/features/workbench/types";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { HistoryTab } from "@/features/workbench/components/history-tab";
 import { ModelSettingsTab } from "@/features/workbench/components/model-settings-tab";
 import { NoticeBanner } from "@/features/workbench/components/notice-banner";
 import { OptimizeTab } from "@/features/workbench/components/optimize-tab";
-import {
-  WORKBENCH_TAB_PATHS,
-  WORKBENCH_TABS,
-} from "@/features/workbench/constants";
+import { WORKBENCH_TAB_PATHS, WORKBENCH_TABS } from "@/features/workbench/constants";
 import { useRequestError } from "@/features/workbench/hooks/use-request-error";
 import { fetchModelSettings } from "@/features/workbench/services/model-settings.service";
-import {
-  getWorkbenchTabFromPathname,
-  tabLabel,
-} from "@/features/workbench/utils";
+import { getWorkbenchTabFromPathname, tabLabel } from "@/features/workbench/utils";
+import { buildLoginRedirectTarget } from "@/lib/auth-redirect";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_workbench")({
-  component: WorkbenchLayout,
-});
-
-function WorkbenchLayout() {
+export function WorkbenchLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -63,9 +42,20 @@ function WorkbenchLayout() {
     });
   }, [navigate]);
 
+  const redirectToLogin = useCallback(() => {
+    void navigate({
+      to: "/login",
+      search: {
+        redirect: buildLoginRedirectTarget(location),
+      },
+      replace: true,
+    });
+  }, [location, navigate]);
+
   const { handleRequestError } = useRequestError({
     showNotice,
     navigateToTab,
+    redirectToLogin,
   });
 
   const refreshModelSettings = useCallback(async (silent = false) => {

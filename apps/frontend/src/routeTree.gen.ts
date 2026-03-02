@@ -9,14 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WorkbenchRouteImport } from './routes/_workbench'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as WorkbenchOptimizeRouteImport } from './routes/_workbench.optimize'
-import { Route as WorkbenchModelsRouteImport } from './routes/_workbench.models'
-import { Route as WorkbenchHistoryRouteImport } from './routes/_workbench.history'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
+import { Route as AuthenticatedAuthenticatedOptimizeRouteImport } from './routes/_authenticated/_authenticated.optimize'
+import { Route as AuthenticatedAuthenticatedModelsRouteImport } from './routes/_authenticated/_authenticated.models'
 
-const WorkbenchRoute = WorkbenchRouteImport.update({
-  id: '/_workbench',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -24,68 +30,82 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WorkbenchOptimizeRoute = WorkbenchOptimizeRouteImport.update({
-  id: '/optimize',
-  path: '/optimize',
-  getParentRoute: () => WorkbenchRoute,
-} as any)
-const WorkbenchModelsRoute = WorkbenchModelsRouteImport.update({
-  id: '/models',
-  path: '/models',
-  getParentRoute: () => WorkbenchRoute,
-} as any)
-const WorkbenchHistoryRoute = WorkbenchHistoryRouteImport.update({
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
   id: '/history',
   path: '/history',
-  getParentRoute: () => WorkbenchRoute,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAuthenticatedOptimizeRoute =
+  AuthenticatedAuthenticatedOptimizeRouteImport.update({
+    id: '/_authenticated/optimize',
+    path: '/optimize',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAuthenticatedModelsRoute =
+  AuthenticatedAuthenticatedModelsRouteImport.update({
+    id: '/_authenticated/models',
+    path: '/models',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/history': typeof WorkbenchHistoryRoute
-  '/models': typeof WorkbenchModelsRoute
-  '/optimize': typeof WorkbenchOptimizeRoute
+  '/login': typeof LoginRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/models': typeof AuthenticatedAuthenticatedModelsRoute
+  '/optimize': typeof AuthenticatedAuthenticatedOptimizeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/history': typeof WorkbenchHistoryRoute
-  '/models': typeof WorkbenchModelsRoute
-  '/optimize': typeof WorkbenchOptimizeRoute
+  '/login': typeof LoginRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/models': typeof AuthenticatedAuthenticatedModelsRoute
+  '/optimize': typeof AuthenticatedAuthenticatedOptimizeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_workbench': typeof WorkbenchRouteWithChildren
-  '/_workbench/history': typeof WorkbenchHistoryRoute
-  '/_workbench/models': typeof WorkbenchModelsRoute
-  '/_workbench/optimize': typeof WorkbenchOptimizeRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/_authenticated/models': typeof AuthenticatedAuthenticatedModelsRoute
+  '/_authenticated/_authenticated/optimize': typeof AuthenticatedAuthenticatedOptimizeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/history' | '/models' | '/optimize'
+  fullPaths: '/' | '/login' | '/history' | '/models' | '/optimize'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/history' | '/models' | '/optimize'
+  to: '/' | '/login' | '/history' | '/models' | '/optimize'
   id:
     | '__root__'
     | '/'
-    | '/_workbench'
-    | '/_workbench/history'
-    | '/_workbench/models'
-    | '/_workbench/optimize'
+    | '/_authenticated'
+    | '/login'
+    | '/_authenticated/history'
+    | '/_authenticated/_authenticated/models'
+    | '/_authenticated/_authenticated/optimize'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  WorkbenchRoute: typeof WorkbenchRouteWithChildren
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_workbench': {
-      id: '/_workbench'
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof WorkbenchRouteImport
+      preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -95,49 +115,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_workbench/optimize': {
-      id: '/_workbench/optimize'
-      path: '/optimize'
-      fullPath: '/optimize'
-      preLoaderRoute: typeof WorkbenchOptimizeRouteImport
-      parentRoute: typeof WorkbenchRoute
-    }
-    '/_workbench/models': {
-      id: '/_workbench/models'
-      path: '/models'
-      fullPath: '/models'
-      preLoaderRoute: typeof WorkbenchModelsRouteImport
-      parentRoute: typeof WorkbenchRoute
-    }
-    '/_workbench/history': {
-      id: '/_workbench/history'
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
       path: '/history'
       fullPath: '/history'
-      preLoaderRoute: typeof WorkbenchHistoryRouteImport
-      parentRoute: typeof WorkbenchRoute
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/_authenticated/optimize': {
+      id: '/_authenticated/_authenticated/optimize'
+      path: '/optimize'
+      fullPath: '/optimize'
+      preLoaderRoute: typeof AuthenticatedAuthenticatedOptimizeRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/_authenticated/models': {
+      id: '/_authenticated/_authenticated/models'
+      path: '/models'
+      fullPath: '/models'
+      preLoaderRoute: typeof AuthenticatedAuthenticatedModelsRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
   }
 }
 
-interface WorkbenchRouteChildren {
-  WorkbenchHistoryRoute: typeof WorkbenchHistoryRoute
-  WorkbenchModelsRoute: typeof WorkbenchModelsRoute
-  WorkbenchOptimizeRoute: typeof WorkbenchOptimizeRoute
+interface AuthenticatedRouteChildren {
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedAuthenticatedModelsRoute: typeof AuthenticatedAuthenticatedModelsRoute
+  AuthenticatedAuthenticatedOptimizeRoute: typeof AuthenticatedAuthenticatedOptimizeRoute
 }
 
-const WorkbenchRouteChildren: WorkbenchRouteChildren = {
-  WorkbenchHistoryRoute: WorkbenchHistoryRoute,
-  WorkbenchModelsRoute: WorkbenchModelsRoute,
-  WorkbenchOptimizeRoute: WorkbenchOptimizeRoute,
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedAuthenticatedModelsRoute: AuthenticatedAuthenticatedModelsRoute,
+  AuthenticatedAuthenticatedOptimizeRoute:
+    AuthenticatedAuthenticatedOptimizeRoute,
 }
 
-const WorkbenchRouteWithChildren = WorkbenchRoute._addFileChildren(
-  WorkbenchRouteChildren,
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  WorkbenchRoute: WorkbenchRouteWithChildren,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

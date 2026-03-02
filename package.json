@@ -58,6 +58,7 @@
       "ai": "^6.0.86",
       "alova": "^3.5.0",
       "better-auth": "^1.4.16",
+      "better-sqlite3": "12.6.2",
       "class-variance-authority": "^0.7.1",
       "clsx": "^2.1.1",
       "cross-env": "10.1.0",

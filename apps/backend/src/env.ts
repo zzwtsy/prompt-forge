@@ -28,7 +28,7 @@ const EnvSchema = z.object({
   /** 保留的最大日志文件数量 (默认: 90) */
   LOG_MAX_FILES: z.coerce.number().default(90),
   /** 是否删除非当前进程创建的日志文件, 默认不删除 */
-  LOG_REMOVE_OTHER_FILES: z.coerce.boolean().default(false),
+  LOG_REMOVE_OTHER_FILES: z.stringbool().default(false),
 
   // --- 数据库相关配置 ---
   DATABASE_URL: z.string().refine(
@@ -44,7 +44,7 @@ const EnvSchema = z.object({
   /** 可信任的来源列表 `,` 逗号分隔 */
   BETTER_AUTH_TRUSTED_ORIGINS: z.string().optional(),
   /** 禁止注册 */
-  DISABLE_SIGN_UP: z.coerce.boolean().default(true),
+  DISABLE_SIGN_UP: z.stringbool().default(true),
 
   // --- AI Provider 相关配置 ---
   /** Provider 密钥加密主密钥(base64, 解码后 32 字节) */

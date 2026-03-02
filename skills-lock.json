@@ -11,6 +11,16 @@
       "sourceType": "github",
       "computedHash": "58ce68f628890c3925aea2b5435a649251ac182057541045c68fc19a27aaa0ec"
     },
+    "alova-client-usage": {
+      "source": "alovajs/skills",
+      "sourceType": "github",
+      "computedHash": "104b5bfcc3f2b7cef2bc794ab8c7a27a9b596a1009f9fd28608af0d92bb6b086"
+    },
+    "alova-wormhole-usage": {
+      "source": "alovajs/skills",
+      "sourceType": "github",
+      "computedHash": "eed08c3057cb695f55e0d2c16bcd1067c792ab4e1ae04bce65d74c508378a58e"
+    },
     "better-auth-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
@@ -25,6 +35,11 @@
       "source": "softaworks/agent-toolkit",
       "sourceType": "github",
       "computedHash": "6d36e69adad781f106a2fb4b19ebc22bf0c211babdc0d1ae5822fa65abb48bd8"
+    },
+    "tanstack-router-best-practices": {
+      "source": "deckardger/tanstack-agent-skills",
+      "sourceType": "github",
+      "computedHash": "65764bc7b90e47f6023cb7f89b3af93eaaafc517754f10b9382e184d4646a77d"
     },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",

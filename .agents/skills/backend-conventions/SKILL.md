@@ -19,6 +19,7 @@ description: 后端开发规范技能。用于 `apps/backend` 相关任务，包
   路由模块骨架、OpenAPI 片段、事务模板、错误码与 `AppError` 模板。
 - `references/checklists.md`
   开发前/开发中/提 PR 前的执行清单与验收清单。
+- 与仓库 docs 对齐时，实施方案优先引用 `docs/implementations/*`，规格优先引用 `docs/specs/*`，总览优先引用 `docs/references/*`。
 
 ## Guardrails
 

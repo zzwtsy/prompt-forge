@@ -1,0 +1,4 @@
+interface:
+  display_name: "Backend Conventions"
+  short_description: "Backend conventions for Hono, OpenAPI, errors, and DB writes"
+  default_prompt: "Use $backend-conventions to implement or review apps/backend routes, OpenAPI definitions, transaction safety, and AppError/code conventions."

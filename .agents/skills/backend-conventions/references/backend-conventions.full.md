@@ -1,10 +1,38 @@
 # Backend 开发规范
 
+- 版本：`v1.1`
+- 同步日期：`2026-03-02`
+- 对齐基线：`docs` 重构后路径 + 当前 `apps/backend` 错误码实现
+
+## 目录
+
+- [文档定位](#full-positioning)
+- [1. 路由目录结构规范（按模块目录）](#full-route-structure)
+- [2. OpenAPI 路由定义规范](#full-openapi)
+- [3. 数据库写操作事务规范](#full-transaction)
+- [4. 项目级注释规范（全项目，不仅数据库）](#full-comments)
+- [5. Handler 与 Service/Repository 拆分策略](#full-splitting)
+- [6. 最小实现示例](#full-minimal-impl)
+  - [6.1 简单逻辑直接放 handlers](#full-minimal-impl-simple)
+  - [6.2 复杂逻辑拆到 service（可选）](#full-minimal-impl-service)
+- [7. 错误码设计规范（codes.ts / index.ts）](#full-error-codes)
+  - [7.1 设计目标](#full-error-codes-goals)
+  - [7.2 编码规则（5 位混合方案）](#full-error-codes-format)
+  - [7.3 `codes.ts` 约束](#full-error-codes-codes-ts)
+  - [7.4 `index.ts` / `AppError` 约束](#full-error-codes-index-ts)
+  - [7.5 现有基础码基线（当前实现）](#full-error-codes-baseline)
+  - [7.6 业务扩展示例（模型设置）](#full-error-codes-model-settings)
+  - [7.7 变更流程](#full-error-codes-change-process)
+
+<a id="full-positioning"></a>
+
 ## 文档定位
 
 - 本文档用于约束 `apps/backend/src` 的路由组织、OpenAPI 写法、事务策略与注释规范。
 - 本文档是后端工程约定，不直接改变运行时 API 行为。
 - 规范优先级：若与仓库顶层约束冲突，以 `AGENTS.md` 为准。
+
+<a id="full-route-structure"></a>
 
 ## 1. 路由目录结构规范（按模块目录）
 
@@ -31,6 +59,12 @@ src/routes/{module}/
 - <https://github.com/w3cj/hono-open-api-starter/blob/main/src/routes/tasks/tasks.routes.ts>
 - <https://github.com/w3cj/hono-open-api-starter/blob/main/src/routes/tasks/tasks.test.ts>
 
+可复制骨架与模板请使用：
+
+- [templates.md §1 路由模块 4 文件骨架](./templates.md#tpl-route-module-skeleton)
+
+<a id="full-openapi"></a>
+
 ## 2. OpenAPI 路由定义规范
 
 统一约束：
@@ -43,85 +77,14 @@ src/routes/{module}/
 - 接口说明统一中文，包括请求体说明、响应说明、错误说明。
 - 中间件统一放在 `createRoute({ middleware: [...] })` 中。
 
-状态码导入仅使用以下两种合法写法：
+可复制模板请使用：
 
-```ts
-import * as HttpStatusCodes from "stoker/http-status-codes";
-```
+- [templates.md §2.1 `createRoute` 标准字段模板](./templates.md#tpl-2-1-create-route)
+- [templates.md §2.3 `jsonApiContent` / `jsonContentRequired` / `jsonApiError` 用法片段](./templates.md#tpl-2-3-api-helpers)
+- [templates.md §2.4 `HttpStatusCodes` 合法导入写法](./templates.md#tpl-2-4-http-status-import)
+- [templates.md §2.5 何时允许 `jsonContent`（场景 B）](./templates.md#tpl-2-5-json-content-scene-b)
 
-```ts
-import { OK, UNAUTHORIZED, UNPROCESSABLE_ENTITY } from "stoker/http-status-codes";
-```
-
-禁止写法（不存在该具名导出）：
-
-```ts
-// 不允许
-import { HttpStatusCodes } from "stoker/http-status-codes";
-```
-
-最小路由示例：
-
-```ts
-import { createRoute, z } from "@hono/zod-openapi";
-import * as HttpStatusCodes from "stoker/http-status-codes";
-import { jsonContentRequired } from "stoker/openapi/helpers";
-
-import { jsonApiContent, jsonApiError } from "@/lib/openapi/helpers";
-import { requireAuth } from "@/middlewares/require-permission";
-
-const tags = ["ModelSettings"];
-
-const CreateProviderBodySchema = z.object({
-  name: z.string().min(1),
-  baseUrl: z.url(),
-  apiKey: z.string().min(1),
-});
-
-const CreateProviderResponseSchema = z.object({
-  id: z.string(),
-});
-
-export const createProviderRoute = createRoute({
-  path: "/api/providers/openai-compatible",
-  method: "post",
-  tags,
-  middleware: [requireAuth()],
-  request: {
-    body: jsonContentRequired(CreateProviderBodySchema, "创建 OpenAI Compatible 服务商请求参数"),
-  },
-  responses: {
-    [HttpStatusCodes.OK]: jsonApiContent(CreateProviderResponseSchema, "创建服务商成功"),
-    [HttpStatusCodes.UNAUTHORIZED]: jsonApiError("未登录或登录已失效"),
-    [HttpStatusCodes.UNPROCESSABLE_ENTITY]: jsonApiError("请求参数校验失败"),
-  },
-});
-```
-
-场景 B 示例（允许使用 `jsonContent`）：
-
-```ts
-import { createRoute, z } from "@hono/zod-openapi";
-import * as HttpStatusCodes from "stoker/http-status-codes";
-import { jsonContent } from "stoker/openapi/helpers";
-
-const tags = ["WebhookCallback"];
-
-const RawWebhookSchema = z.object({
-  event: z.string(),
-  payload: z.unknown(),
-});
-
-export const receiveWebhookRoute = createRoute({
-  path: "/api/webhook/raw",
-  method: "post",
-  tags,
-  responses: {
-    // 场景 B：此接口按第三方 webhook 协议返回原始结构，不走统一 success 包裹。
-    [HttpStatusCodes.OK]: jsonContent(RawWebhookSchema, "第三方 webhook 原始响应"),
-  },
-});
-```
+<a id="full-transaction"></a>
 
 ## 3. 数据库写操作事务规范
 
@@ -132,22 +95,12 @@ export const receiveWebhookRoute = createRoute({
 - 发生异常时抛错回滚，不做“部分成功”写入。
 - 事务中不混入外部网络调用（例如第三方 HTTP 请求），避免长事务占锁。
 
-最小事务示例：
+可复制模板请使用：
 
-```ts
-await db.transaction(async (tx) => {
-  // 约束：模型禁用与默认模型变更必须同成同败。
-  await tx
-    .update(aiModels)
-    .set({ enabled: false })
-    .where(eq(aiModels.id, modelId));
+- [templates.md §3.1 单事务多步写入模板](./templates.md#tpl-3-1-transaction-write)
+- [templates.md §3.2 禁止外部 HTTP 调用进入事务的注释模板](./templates.md#tpl-3-2-transaction-comment)
 
-  await tx
-    .update(aiModelDefaults)
-    .set({ evaluateModelId: null })
-    .where(eq(aiModelDefaults.id, 1));
-});
-```
+<a id="full-comments"></a>
 
 ## 4. 项目级注释规范（全项目，不仅数据库）
 
@@ -184,6 +137,8 @@ const evaluateModelId = defaults?.evaluateModelId ?? null;
 const id = row.id;
 ```
 
+<a id="full-splitting"></a>
+
 ## 5. Handler 与 Service/Repository 拆分策略
 
 - 默认：`handlers` 直接实现简单业务逻辑。
@@ -195,7 +150,11 @@ const id = row.id;
   - 查询明显复杂（多条件拼装、批量 upsert、多表联动）；
   - 同一查询逻辑跨 handler/service 复用。
 
+<a id="full-minimal-impl"></a>
+
 ## 6. 最小实现示例
+
+<a id="full-minimal-impl-simple"></a>
 
 ### 6.1 简单逻辑直接放 handlers
 
@@ -211,6 +170,8 @@ export const listProvidersHandler: AppRouteHandler<typeof listProvidersRoute> = 
   return ok(c, { items: rows });
 };
 ```
+
+<a id="full-minimal-impl-service"></a>
 
 ### 6.2 复杂逻辑拆到 service（可选）
 
@@ -232,6 +193,8 @@ export async function syncProviderModels(providerId: string) {
 }
 ```
 
+<a id="full-error-codes"></a>
+
 ## 7. 错误码设计规范（codes.ts / index.ts）
 
 适用范围：
@@ -240,11 +203,15 @@ export async function syncProviderModels(providerId: string) {
 - `apps/backend/src/lib/errors/index.ts`
 - 以及所有通过 `fail` / `AppError` 返回错误响应的后端模块。
 
+<a id="full-error-codes-goals"></a>
+
 ### 7.1 设计目标
 
 - 错误码是前后端契约，优先稳定、可枚举、可检索。
 - HTTP 状态码表达传输语义，业务错误码表达业务语义；两者必须同时存在。
 - 默认 `message` 使用中文，面向最终用户可读。
+
+<a id="full-error-codes-format"></a>
 
 ### 7.2 编码规则（5 位混合方案）
 
@@ -277,6 +244,8 @@ export async function syncProviderModels(providerId: string) {
 - `40401`：资源不存在（`4` + `04` + `01`）。
 - `52001`：模型同步时调用外部服务失败（`5` + `20` + `01`）。
 
+<a id="full-error-codes-codes-ts"></a>
+
 ### 7.3 `codes.ts` 约束
 
 - `AppErrorCode` 是项目唯一错误码源；禁止在业务模块写散落常量码。
@@ -288,29 +257,35 @@ export async function syncProviderModels(providerId: string) {
 - 码值全局不可重复；已发布码值不可复用（即使逻辑下线也不回收）。
 - 默认 `message` 必须为中文；业务层可按场景覆写，但不得改变原始错误语义。
 
+<a id="full-error-codes-index-ts"></a>
+
 ### 7.4 `index.ts` / `AppError` 约束
 
 - 业务层（handler/service）统一抛 `new AppError(...)`，由全局 `appOnError` 统一记录日志并输出标准错误响应。
 - `status` 必须显式传入，不允许从 `code` 反推，避免语义耦合。
 - `details` 仅放结构化调试信息，禁止写入密钥、token、隐私数据等敏感信息。
-- 重构建议：`index.ts` 不再重复声明 `ErrorDescriptor`，改为复用 `codes.ts` 导出的类型，保持错误描述结构单一来源。
+- 当前约束：`index.ts` 复用 `codes.ts` 导出的 `ErrorDescriptor`，保持错误描述结构单一来源。
 
-### 7.5 现有基础码重构目标（直接切新码）
+<a id="full-error-codes-baseline"></a>
 
-说明：本节定义目标映射，作为后续代码重构基线。当前文档更新不直接修改运行时代码。
+### 7.5 现有基础码基线（当前实现）
 
-| 错误 Key | 旧码值 | 新码值 | 规范默认文案 |
-| --- | --- | --- | --- |
-| `SYSTEM_ERROR` | `10001` | `10001` | 系统内部错误 |
-| `HTTP_ERROR` | `10002` | `10002` | HTTP 异常 |
-| `VALIDATION_ERROR` | `30001` | `30001` | 请求参数校验失败 |
-| `NOT_FOUND` | `40001` | `40401` | 资源不存在 |
-| `UNAUTHORIZED` | `40101` | `40101` | 未认证或登录失效 |
-| `FORBIDDEN` | `40301` | `40301` | 无权限访问 |
+说明：本节描述当前仓库已采用的基础码值，用于规范与实现对照。
+
+| 错误 Key | 码值 | 规范默认文案 |
+| --- | --- | --- |
+| `SYSTEM_ERROR` | `10001` | 系统内部错误 |
+| `HTTP_ERROR` | `10002` | HTTP 异常 |
+| `VALIDATION_ERROR` | `30001` | 请求参数校验失败 |
+| `NOT_FOUND` | `40401` | 资源不存在 |
+| `UNAUTHORIZED` | `40101` | 未认证或登录失效 |
+| `FORBIDDEN` | `40301` | 无权限访问 |
+
+<a id="full-error-codes-model-settings"></a>
 
 ### 7.6 业务扩展示例（模型设置）
 
-以下为模型设置与运行时模型解析场景的建议错误码（与 `docs/model-settings-implementation.md` 对齐）：
+以下为模型设置与运行时模型解析场景的建议错误码（与 `docs/implementations/impl-model-settings.md` 对齐）：
 
 - `PROVIDER_NOT_FOUND = 42001`
 - `MODEL_NOT_FOUND = 42002`
@@ -321,6 +296,8 @@ export async function syncProviderModels(providerId: string) {
 - `PROVIDER_API_KEY_MISSING = 22005`
 - `MODEL_SYNC_FAILED = 52001`
 - `MODEL_CONFLICT = 22006`
+
+<a id="full-error-codes-change-process"></a>
 
 ### 7.7 变更流程
 

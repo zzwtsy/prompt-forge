@@ -53,6 +53,9 @@
 - [ ] 已更新 `app.ts` 路由挂载（若新增模块）。
 - [ ] 已运行目标验证命令（示例：`bun run --filter backend test`）。
 - [ ] 若改动规范文本，已同步更新 docs 与 skill 镜像。
+- [ ] 已检查 skill 内引用的 docs 路径均为重构后路径（`docs/specs|implementations|references|assets`）。
+- [ ] 已检查 `agents/openai.yaml` 与 `SKILL.md` frontmatter 的 `name/description` 语义一致。
+- [ ] 若调整长文档标题（`backend-conventions.full.md` / `templates.md`），已同步更新 TOC。
 
 ## 4. 验收场景清单
 

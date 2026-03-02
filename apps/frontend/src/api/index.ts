@@ -7,7 +7,9 @@ export const alovaInstance = createAlova({
   statesHook: reactHook,
   baseURL: "",
   requestAdapter: fetchAdapter(),
-  beforeRequest: (_method) => { },
+  beforeRequest: (method) => {
+    method.config.credentials = "include";
+  },
   responded: (res) => {
     return res.json();
   },

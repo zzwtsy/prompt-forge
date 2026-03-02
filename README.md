@@ -4,26 +4,44 @@
 
 ## 项目状态
 
-### 已实现
+### 后端实现状态（按当前代码）
 
-- 前后端基础工程（Bun monorepo）
-- 后端基础服务与 OpenAPI 文档页
-- Better Auth 基础鉴权路由
+- 已实现：提示词评估与优化接口、模型服务商与模型管理接口、默认评估/优化模型配置、统一鉴权与错误响应。
+- 未实现：优化任务与优化结果持久化（`PromptRun` / `SavedPrompt`）以及 `GET /api/saved-prompts`。
 
-### 规划中
+详细需求见：`docs/requirements.md`。  
+说明：需求文档是目标态定义；README 中“已实现/未实现”按当前仓库后端代码（`apps/backend/src`）标注。
 
-- 提示词评估与优化完整业务链路
-- 模型设置页面与模型管理
-- 优化结果保存与追溯页面
+## 后端能力实现矩阵（对齐 requirements.md）
 
-详细需求见：`docs/requirements.md`
+| 需求编号 | 状态 | 后端实现说明 |
+| --- | --- | --- |
+| `MS-01` | 前端范围 | 独立“模型设置”页面属于前端 UI 范围；后端已提供所需模型设置接口。 |
+| `MS-02` | 已实现 | 支持服务商启用/禁用（`PUT /api/providers/{providerId}`）。 |
+| `MS-03` | 已实现 | 支持模型启用/禁用（`PUT /api/models/{modelId}`）。 |
+| `MS-04` | 已实现 | 服务商支持配置 `baseUrl/apiKey`；`apiKey` 密文存储，仅返回脱敏值与存在标记。 |
+| `MS-05` | 已实现 | 支持手动同步模型并缓存入库（`POST /api/providers/{providerId}/models/sync`）。 |
+| `MS-06` | 已实现 | 支持手动新增模型（`POST /api/models`）。 |
+| `MS-07` | 已实现 | 支持评估默认模型与优化默认模型读取/设置（`GET/PUT /api/model-defaults`）。 |
+| `PO-01` | 已实现 | 评估与优化接口均支持显式传入 `modelId`。 |
+| `PO-02` | 已实现 | 支持 `temperature`、`maxTokens`，并映射到 AI SDK 调用参数。 |
+| `PO-03` | 前端范围 | “复制评估结果”属于前端交互能力，不作为后端能力声明。 |
+| `PO-04` | 前端范围 | “复制优化提示词”属于前端交互能力，不作为后端能力声明。 |
+| `PO-05` | 未实现 | 尚未落地 `PromptRun` / `SavedPrompt` 持久化。 |
+| `SP-01` | 未实现 | “优化结果保存页面”对应后端接口与存储未实现。 |
+| `SP-02` | 未实现 | 尚无“仅展示优化后提示词列表”的查询接口实现。 |
+| `SP-03` | 未实现 | 尚无“可追溯到来源优化任务”的后端数据与接口实现。 |
 
-## 核心能力（Roadmap）
+## 后端实现说明
 
-- Prompt 评估（Planned）
-- Prompt 优化（Planned）
-- 模型服务商与模型管理（Planned）
-- 优化记录保存与追溯（Planned）
+- 鉴权：模型设置与提示词运行时接口均要求登录态（`requireAuth` 中间件）。
+- 统一响应结构：
+  - 成功：`{ success: true, data, requestId? }`
+  - 失败：`{ success: false, error: { code, message, details? }, requestId? }`
+- 错误码：使用统一 `AppError` + `AppErrorCode` 体系，覆盖认证、参数校验、资源不存在、模型不可用等场景。
+- 密钥安全：Provider `apiKey` 使用 AES-256-GCM 密文存储，接口侧仅返回 `hasApiKey` 与 `apiKeyMasked`。
+- 启动初始化：服务启动时执行幂等 seed，补齐 OpenAI provider 与默认模型配置单例行。
+- 测试现状：后端 Vitest 当前覆盖 7 个测试文件、28 个用例（本地校验通过）。
 
 ## 技术栈
 
@@ -111,21 +129,25 @@ bun run dev:frontend
 
 ## API 状态
 
-### 已实现
+### 已实现接口（按当前后端代码）
 
 - `GET /doc`
 - `GET /reference`
 - `GET|POST /api/auth/*`
 - `GET /api/auth/reference`（开发环境）
-
-### 规划中（Planned）
-
+- `GET /api/providers`
+- `POST /api/providers/openai-compatible`
+- `PUT /api/providers/{providerId}`
+- `POST /api/providers/{providerId}/models/sync`
+- `POST /api/models`
+- `PUT /api/models/{modelId}`
+- `GET /api/model-defaults`
+- `PUT /api/model-defaults`
 - `POST /api/prompt/evaluate`
 - `POST /api/prompt/optimize`
-- `GET/PUT /api/providers`
-- `POST /api/providers/{id}/models/sync`
-- `POST/PUT /api/models`
-- `GET/PUT /api/model-defaults`
+
+### 未实现接口（requirements 目标态）
+
 - `GET /api/saved-prompts`
 
 ## 文档

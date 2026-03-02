@@ -1,6 +1,6 @@
 # UI 需求文档（Prompt Forge）
 
-- 版本：`v1`
+- 版本：`v1.1`
 - 日期：`2026-03-02`
 - 适用范围：`apps/frontend` 前端页面与交互实现；涉及的后端接口联动约束
 
@@ -8,7 +8,8 @@
 
 - 本文档用于沉淀 UI 实现规格，避免与产品总需求混杂。
 - 本文档与 [requirements.md](/home/vscode/prompt-forge/docs/requirements.md) 对齐，不替代产品需求文档。
-- 本文档不修改 [requirements.md](/home/vscode/prompt-forge/docs/requirements.md) 既有内容。
+- 本文档是 UI 交付规格，按“当前代码基线 + 目标实现”双视角描述。
+- 历史搜索扩展能力依赖 [extension-requirements.md](/home/vscode/prompt-forge/docs/extension-requirements.md) 的增量定义。
 
 ## 2. 背景与目标
 
@@ -18,20 +19,85 @@
   - `模型设置`：完成默认模型、服务商、模型可用性管理。
   - `历史记录`：完成优化结果检索、查看、复制。
 
-## 3. 页面信息架构
+## 3. 技术栈与实现边界
+
+### 3.1 技术栈约束
+
+- 前端技术栈：`React 19 + Vite + TanStack Router + Alova + Tailwind CSS v4 + shadcn/ui`。
+- 路由机制：使用 TanStack Router 文件路由，路由树由插件自动生成。
+- API 类型来源：由 Alova 根据后端 OpenAPI 文档生成。
+
+### 3.2 当前实现基线（避免误读为已实现）
+
+- 当前 `apps/frontend` 仍是模板态，仅存在 `/` 路由与 Home 占位页面。
+- 本文档描述的是 `apps/frontend` 目标交付态，不代表当前页面已完成。
+
+### 3.3 生成产物与工程规则
+
+- 下列文件/目录为生成产物，不允许手改：
+  - `apps/frontend/src/routeTree.gen.ts`
+  - `apps/frontend/src/api/*`（除 `index.ts` 外）
+- 后端 OpenAPI 契约变化后，统一执行 `bun run gen:api` 刷新前端 API 类型。
+
+## 4. TanStack Router 约束下的信息架构
 
 - 页面顶层结构：`Header + Tabs + TabPanel`。
 - Tabs 固定三项：`提示词优化`、`模型设置`、`历史记录`。
 - Tabs 视觉要求：整体胶囊长条（矩形主体 + 左右半圆端点），居中，非分离式按钮组。
 - 默认页签：`提示词优化`。
-- 建议路由状态：`?tab=optimize|models|history`，用于刷新后保留当前页签。
-- 响应式要求：
+
+### 4.1 强制路由状态
+
+- 页面路由固定为 `/`。
+- `tab` 必须通过 URL query 表达并受类型约束：
+  - `tab` 类型：`"optimize" | "models" | "history"`
+  - 默认值：`optimize`
+  - 非法值回落：`optimize`
+- 必须在路由层使用 `validateSearch` 做 `tab` 校验与默认值回落。
+
+### 4.2 响应式与状态保留
+
+- 响应式：
   - 桌面端优先双列/分区展示。
   - 移动端自动改为纵向堆叠。
+- 状态保留规则：
+  - URL 仅保留 `tab`。
+  - Tab 切换不清空当前会话内输入与结果状态。
+  - 刷新后仅恢复当前 `tab`，不恢复未持久化的评估/优化结果（本期不引入 localStorage 持久化）。
 
-## 4. 提示词优化页面
+## 5. 鉴权与请求传输前置条件（P0）
 
-### 4.1 布局顺序
+### 5.1 鉴权前置条件
+
+- 模型设置、评估/优化、历史记录相关业务接口均要求登录态。
+- `401` 在前端语义上属于“前置条件失败”（会话无效/缺失），不是业务流程异常。
+- 前端需提供统一登录失效提示，并引导用户重新登录后重试。
+
+### 5.2 统一响应契约（ApiEnvelope）
+
+- 成功响应：
+
+```ts
+{ success: true; data: T; requestId?: string }
+```
+
+- 失败响应：
+
+```ts
+{ success: false; error: { code: number; message: string; details?: unknown }; requestId?: string }
+```
+
+- 前端必须统一解析 `success` 字段，不得仅依赖 HTTP 状态做业务判断。
+
+### 5.3 本地联调传输策略
+
+- 固定联调方式：`Vite` 配置 `/api` 代理到 `http://localhost:3001`。
+- 会话策略：请求需携带认证 cookie（与 Better Auth 会话机制一致）。
+- 采用该策略的原因：当前 `alova` 默认 `baseURL=""`，若不配置代理，前后端跨端口联调不稳定。
+
+## 6. 提示词优化页面
+
+### 6.1 布局顺序
 
 1. `原始提示词`输入框（多行）。
 2. `评估模型`与`优化模型`两个选择区。
@@ -40,7 +106,7 @@
 5. `评估结果`面板（含复制）。
 6. `优化结果`面板（含复制、条件保存）。
 
-### 4.2 字段与行为规则
+### 6.2 字段与行为规则
 
 - `原始提示词`为空时：`评估`按钮禁用。
 - 无评估结果时：`优化`按钮禁用。
@@ -50,47 +116,48 @@
   - `temperature`：`0 ~ 2`。
   - `maxTokens`：正整数。
 
-### 4.3 结果与复制
+### 6.3 结果与复制
 
 - `评估结果`面板提供`复制`按钮，复制完整评估文本。
 - `优化结果`面板提供`复制`按钮，复制完整优化文本。
 
-### 4.4 保存策略（自动保存失败兜底）
+### 6.4 保存策略（自动保存失败兜底）
 
 - 优化成功后先依赖后端自动保存。
-- 仅当返回 `optimize.persistence.saved=false` 且 `retryable=true` 且 `saveDraft` 存在时，显示可点击`保存`按钮。
+- 仅当满足以下条件时，展示可点击`保存`按钮：
+  - `persistence.saved=false`
+  - `persistence.retryable=true`
+  - `persistence.saveDraft` 存在
 - `保存`按钮点击后调用 `POST /api/saved-prompts/retry`。
 - 重试保存成功后，清理本次 `saveDraft` 本地状态，并将`保存`按钮置为不可点击/不再展示可点击态。
 
-### 4.5 请求映射
+### 6.5 请求与响应映射
 
 - 评估：`POST /api/prompt/evaluate`
   - 请求体：`prompt`、`modelId?`、`temperature?`、`maxTokens?`。
 - 优化：`POST /api/prompt/optimize`
   - 请求体：`prompt`、`evaluationResult?`、`modelId?`、`temperature?`、`maxTokens?`、`evaluateContext?`。
   - 若已有评估执行记录，应传 `evaluateContext` 以保留追溯信息。
+  - 响应体关键字段：`optimizedPrompt`、`resolvedModel`、`promptRunId`、`savedPromptId`、`persistence`。
 
-## 5. 模型设置页面
+## 7. 模型设置页面
 
-### 5.1 页面分区
+### 7.1 页面分区
 
 1. 顶部：`默认模型设置`面板
-
     - `默认评估模型`
     - `默认优化模型`
-
 2. 下方：`服务商设置`面板（左右双栏）
-
     - 左侧：服务商列表
     - 右侧：服务商详细设置
 
-### 5.2 左侧服务商列表规则
+### 7.2 左侧服务商列表规则
 
 - 顶部提供`添加自定义服务商`按钮。
 - 列表排序统一为：已启用服务商优先，其次按名称升序。
 - 点击某服务商后，右侧加载对应详细设置。
 
-### 5.3 右侧详细设置规则
+### 7.3 右侧详细设置规则
 
 - 首次进入页面时，默认显示排序后的第一个服务商详情。
 - 顶部展示服务商名称与启用开关。
@@ -102,7 +169,7 @@
   - 列表排序统一为：已启用模型优先，其次按模型名称升序。
   - 每个模型项提供启用开关。
 
-### 5.4 请求映射
+### 7.4 请求映射
 
 - 读取服务商与模型：`GET /api/providers`
 - 新增兼容服务商：`POST /api/providers/openai-compatible`
@@ -113,9 +180,9 @@
 - 读取默认模型：`GET /api/model-defaults`
 - 更新默认模型：`PUT /api/model-defaults`
 
-## 6. 历史记录页面
+## 8. 历史记录页面
 
-### 6.1 展示与交互
+### 8.1 展示与交互
 
 - 顶部提供搜索框，用于搜索相关提示词。
 - 列表项应显示：
@@ -125,31 +192,48 @@
 - 点击列表项时，展示完整提示词内容。
 - “完整提示词”在本期定义为：`优化后完整提示词`（`optimizedPrompt`）。
 
-### 6.2 分页与搜索
+### 8.2 当前契约模式（现状）
 
+- `GET /api/saved-prompts` 当前查询参数：`{ limit?: number; cursor?: string }`。
 - 列表分页使用 `cursor` 机制。
+- 本模式下搜索仅能用于“已加载列表”的本地筛选。
+
+### 8.3 扩展契约模式（目标）
+
+- 扩展目标：`GET /api/saved-prompts` 支持 `query?` 参数。
+- 目标查询参数：`{ limit?: number; cursor?: string; query?: string }`。
 - 搜索目标字段为 `optimizedPrompt`。
-- 本期目标方案：后端关键词搜索（见第 8 章新增接口约束）。
-- 临时降级策略：
-  - 若后端 `query` 参数暂未就绪，允许仅对“已加载列表”执行本地筛选。
-  - 该降级方案不作为最终验收标准。
+- 该能力依赖 [extension-requirements.md](/home/vscode/prompt-forge/docs/extension-requirements.md) 落地。
 
-## 7. 全局状态与交互规则
+### 8.4 降级触发与退出条件
 
-- 加载态：
-  - 页面初始化加载 providers/defaults/history 时显示 loading。
-  - 操作按钮在请求中进入 loading + disabled。
-- 错误态：
-  - `401`：提示登录失效并引导重新登录。
-  - `422`（默认模型失效或模型不可用）：提示并引导至`模型设置`修复。
-  - `saved-prompts/retry` 草稿无效或过期：提示需重新执行优化。
-- 状态保留：
-  - 切换 tabs 不清空当前会话内输入与结果状态。
-  - 可通过 URL query 保存当前 tab。
+- 降级触发：后端环境未支持 `query` 时，启用“已加载列表本地筛选”。
+- 降级退出：后端支持 `query` 且前端 API 类型更新后，必须切回服务端搜索。
+- 服务端搜索模式下，搜索词变化必须重置 `cursor` 并从第一页重新请求。
 
-## 8. API 映射与接口约束
+## 9. 全局状态与错误处理规则
 
-### 8.1 直接复用的现有接口
+### 9.1 加载态
+
+- 页面初始化加载 providers/defaults/history 时显示 loading。
+- 操作按钮在请求中进入 loading + disabled。
+
+### 9.2 错误态（细化到错误码）
+
+- `40101`（未认证或登录失效）：提示登录失效并引导重新登录。
+- `22004`（默认模型不可用）：提示并引导至`模型设置`修复默认模型。
+- `22005`（服务商 API Key 未配置）：提示并引导至`模型设置`补齐密钥。
+- `32101`（保存草稿无效或过期）：提示“需重新执行优化后再保存”。
+- `30001`（请求参数校验失败）：提示输入参数不合法并高亮对应字段。
+
+### 9.3 状态保留
+
+- 切换 tabs 不清空当前会话内输入与结果状态。
+- 当前 tab 通过 URL query 持久化。
+
+## 10. API 映射与接口约束
+
+### 10.1 直接复用的现有接口
 
 - `POST /api/prompt/evaluate`
 - `POST /api/prompt/optimize`
@@ -164,33 +248,46 @@
 - `PUT /api/model-defaults`
 - `GET /api/saved-prompts`
 
-### 8.2 新增后端需求（历史搜索）
+### 10.2 `GET /api/saved-prompts` 参数契约分层
 
-- 为 `GET /api/saved-prompts` 增加可选查询参数：`query`。
-- 语义：按关键词匹配 `optimizedPrompt`。
-- 建议类型变化：
-  - `ListSavedPromptsQuery` 从 `{ limit?: number; cursor?: string }`
-  - 扩展为 `{ limit?: number; cursor?: string; query?: string }`。
-- 分页语义保持不变：`items + nextCursor`。
+- 当前契约（已实现）：`params: { limit?: number; cursor?: string }`
+- 扩展契约（目标态）：`params: { limit?: number; cursor?: string; query?: string }`
 
-### 8.3 优化页保存联动约束
+### 10.3 前端调用契约
 
-- 当前端接收 optimize 响应中的 `persistence.saved=false` 时，前端需要保留 `saveDraft` 并开放手动保存入口。
-- 手动保存仅调用 `POST /api/saved-prompts/retry`，不新增二次保存接口。
+- 统一遵循 `ApiEnvelope`：
+  - 成功：`{ success: true; data: T; requestId?: string }`
+  - 失败：`{ success: false; error: { code: number; message: string; details?: unknown }; requestId?: string }`
 
-## 9. 验收测试清单
+### 10.4 路由查询契约
 
-1. 原始提示词为空时，`评估`按钮禁用。
-2. 无评估结果时，`优化`按钮禁用。
-3. 评估成功后可复制评估结果全文。
-4. 优化成功后可复制优化结果全文。
-5. 自动保存成功时，`保存`按钮不可用或不展示可点击态。
-6. 自动保存失败时，`保存`按钮可点击并可成功触发重试保存。
-7. 模型设置页面首屏默认展示第一个服务商详情。
-8. 服务商列表排序满足“启用优先 + 名称升序”。
-9. 模型列表排序满足“启用优先 + 名称升序”。
-10. 默认评估模型与默认优化模型设置成功后可回显。
-11. 历史搜索可按关键词命中结果（依赖后端 `query` 实现）。
-12. 点击历史记录项可查看优化后完整提示词。
-13. 历史分页加载行为正确（`nextCursor` 连续可用）。
-14. 历史列表项复制按钮可复制完整 `optimizedPrompt`。
+- `tab`：`optimize | models | history`
+- 未传时默认 `optimize`，非法值回落 `optimize`。
+
+## 11. 验收测试清单
+
+1. 直接访问 `/?tab=models`、`/?tab=history` 可正确落位对应页签。
+2. 访问 `/?tab=unknown` 时回落到 `optimize`。
+3. 原始提示词为空时，`评估`按钮禁用。
+4. 无评估结果时，`优化`按钮禁用。
+5. 评估成功后可复制评估结果全文。
+6. 优化成功后可复制优化结果全文。
+7. 自动保存成功时，`保存`按钮不可用或不展示可点击态。
+8. 优化返回 `persistence.saved=false` 时，展示可点击`保存`入口。
+9. 重试保存成功后，`保存`入口消失且 `saveDraft` 本地状态被清理。
+10. 模型设置页面首屏默认展示第一个服务商详情。
+11. 服务商列表排序满足“启用优先 + 名称升序”。
+12. 模型列表排序满足“启用优先 + 名称升序”。
+13. 默认评估模型与默认优化模型设置成功后可回显。
+14. 未登录访问业务接口时触发统一登录失效提示与引导。
+15. 历史列表在“当前契约模式”只用 `limit/cursor` 仍可分页。
+16. 历史列表在“扩展契约模式”中，`query` 变化会重置分页并从第一页请求。
+17. 后端未支持 `query` 时，前端降级本地过滤并给出明确提示。
+18. 接口代码生成后（`bun run gen:api`），业务代码不依赖手写 API 类型。
+
+## 12. 假设与默认值
+
+- 默认沿用单路由 + `tab` 查询参数方案，不拆为 `/optimize|/models|/history` 多路由。
+- 默认将“登录态”定义为 UI 执行前置条件；保留“单人使用”定位，但不再等同“无登录”。
+- 默认将 `query` 搜索作为扩展能力管理：本主文档记录“现状 + 目标”，详细规则以扩展文档为准。
+- 本轮仅更新文档，不改 `apps/frontend` 代码与后端接口实现。

@@ -125,6 +125,14 @@ export const AppErrorCode = {
    */
   MODEL_SYNC_FAILED: { code: 52001, message: "模型同步失败，请稍后重试" },
 
+  /**
+   * 保存草稿无效
+   * - 场景: saveDraft 验签失败、版本不匹配或已过期
+   * - 对应 HTTP: 422
+   * - details 对外: 否
+   */
+  SAVE_DRAFT_INVALID: { code: 32101, message: "保存草稿无效或已过期" },
+
 } as const satisfies Record<string, ErrorDescriptor>;
 
 /** 提取 Key 的联合类型: "SYSTEM_ERROR" | "VALIDATION_ERROR" | ... */

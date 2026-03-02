@@ -1,10 +1,12 @@
 import type { CallSettings } from "ai";
 import type { evaluatePromptRoute, optimizePromptRoute } from "./prompt.routes";
+import type { PromptCallParams } from "@/lib/ai/save-draft-signing";
 
 import type { AppRouteHandler } from "@/lib/types";
 
 import { generateText } from "ai";
 import { resolveRuntimeModel } from "@/lib/ai/model-resolver";
+import { persistPromptHistory } from "@/lib/prompt/prompt-history-service";
 
 import { ok } from "@/lib/utils/http";
 
@@ -24,6 +26,23 @@ function buildCallSettings(options: {
     settings.maxOutputTokens = options.maxTokens;
 
   return settings;
+}
+
+function buildPromptCallParams(options: {
+  temperature?: number;
+  maxTokens?: number;
+}): PromptCallParams | null {
+  const params: PromptCallParams = {};
+  if (options.temperature != null)
+    params.temperature = options.temperature;
+
+  if (options.maxTokens != null)
+    params.maxTokens = options.maxTokens;
+
+  if (Object.keys(params).length === 0)
+    return null;
+
+  return params;
 }
 
 function buildEvaluatePrompt(inputPrompt: string) {
@@ -100,8 +119,31 @@ export const optimizePromptHandler: AppRouteHandler<typeof optimizePromptRoute> 
     }),
   });
 
+  const persistResult = await persistPromptHistory({
+    originalPrompt: body.prompt,
+    evaluationResult: body.evaluationResult ?? null,
+    optimizedPrompt: result.text,
+    evaluateModelId: body.evaluateContext?.modelId ?? null,
+    optimizeModelId: runtimeModel.resolvedModel.modelId,
+    evaluateParams: buildPromptCallParams({
+      temperature: body.evaluateContext?.temperature,
+      maxTokens: body.evaluateContext?.maxTokens,
+    }),
+    optimizeParams: buildPromptCallParams({
+      temperature: body.temperature,
+      maxTokens: body.maxTokens,
+    }),
+  });
+
   return ok(c, {
     optimizedPrompt: result.text,
     resolvedModel: runtimeModel.resolvedModel,
+    promptRunId: persistResult.promptRunId,
+    savedPromptId: persistResult.savedPromptId,
+    persistence: {
+      saved: persistResult.saved,
+      retryable: persistResult.retryable,
+      saveDraft: persistResult.saveDraft,
+    },
   });
 };

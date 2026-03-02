@@ -25,5 +25,7 @@ export default {
   'ModelSettings.get_api_model_defaults': ['GET', '/api/model-defaults'],
   'ModelSettings.put_api_model_defaults': ['PUT', '/api/model-defaults'],
   'PromptRuntime.post_api_prompt_evaluate': ['POST', '/api/prompt/evaluate'],
-  'PromptRuntime.post_api_prompt_optimize': ['POST', '/api/prompt/optimize']
+  'PromptRuntime.post_api_prompt_optimize': ['POST', '/api/prompt/optimize'],
+  'SavedPrompts.get_api_saved_prompts': ['GET', '/api/saved-prompts'],
+  'SavedPrompts.post_api_saved_prompts_retry': ['POST', '/api/saved-prompts/retry']
 };

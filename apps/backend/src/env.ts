@@ -49,6 +49,10 @@ const EnvSchema = z.object({
   // --- AI Provider 相关配置 ---
   /** Provider 密钥加密主密钥(base64, 解码后 32 字节) */
   AI_PROVIDER_SECRET_KEY: z.string().min(1),
+
+  // --- Prompt 保存草稿签名配置 ---
+  /** 保存草稿签名密钥，使用独立密钥便于轮换与权限隔离 */
+  PROMPT_SAVE_DRAFT_SECRET: z.string().min(1),
 });
 
 /** 应用启动时环境变量的最终类型。 */

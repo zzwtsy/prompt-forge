@@ -15,6 +15,13 @@
       "when": 1772268587558,
       "tag": "0001_lush_jimmy_woo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1772435372507,
+      "tag": "0002_careless_supernaut",
+      "breakpoints": true
     }
   ]
 }

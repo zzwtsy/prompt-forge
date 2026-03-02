@@ -760,6 +760,11 @@ declare global {
        *   modelId?: string
        *   temperature?: number
        *   maxTokens?: number
+       *   evaluateContext?: {
+       *     modelId: string
+       *     temperature?: number
+       *     maxTokens?: number
+       *   }
        * }
        * ```
        *
@@ -777,6 +782,36 @@ declare global {
        *       modelId: string
        *       modelName: string
        *     }
+       *     promptRunId: string
+       *     savedPromptId: string
+       *     persistence: {
+       *       saved: boolean
+       *       retryable: boolean
+       *       saveDraft?: {
+       *         version: 'v1'
+       *         issuedAt: string
+       *         expiresAt: string
+       *         payload: {
+       *           promptRunId: string
+       *           savedPromptId: string
+       *           originalPrompt: string
+       *           evaluationResult: string | null
+       *           optimizedPrompt: string
+       *           evaluateModelId: string | null
+       *           optimizeModelId: string
+       *           evaluateParams: {
+       *             temperature?: number
+       *             maxTokens?: number
+       *           } | null
+       *           optimizeParams: {
+       *             temperature?: number
+       *             maxTokens?: number
+       *           } | null
+       *           createdAt: string
+       *         }
+       *         signature: string
+       *       }
+       *     }
        *   }
        *   requestId?: string
        * }
@@ -793,6 +828,36 @@ declare global {
               modelId: string;
               modelName: string;
             };
+            promptRunId: string;
+            savedPromptId: string;
+            persistence: {
+              saved: boolean;
+              retryable: boolean;
+              saveDraft?: {
+                version: 'v1';
+                issuedAt: string;
+                expiresAt: string;
+                payload: {
+                  promptRunId: string;
+                  savedPromptId: string;
+                  originalPrompt: string;
+                  evaluationResult: string | null;
+                  optimizedPrompt: string;
+                  evaluateModelId: string | null;
+                  optimizeModelId: string;
+                  evaluateParams: {
+                    temperature?: number;
+                    maxTokens?: number;
+                  } | null;
+                  optimizeParams: {
+                    temperature?: number;
+                    maxTokens?: number;
+                  } | null;
+                  createdAt: string;
+                };
+                signature: string;
+              };
+            };
           };
           requestId?: string;
         }> & {
@@ -802,6 +867,11 @@ declare global {
             modelId?: string;
             temperature?: number;
             maxTokens?: number;
+            evaluateContext?: {
+              modelId: string;
+              temperature?: number;
+              maxTokens?: number;
+            };
           };
         }
       >(
@@ -817,10 +887,224 @@ declare global {
               modelId: string;
               modelName: string;
             };
+            promptRunId: string;
+            savedPromptId: string;
+            persistence: {
+              saved: boolean;
+              retryable: boolean;
+              saveDraft?: {
+                version: 'v1';
+                issuedAt: string;
+                expiresAt: string;
+                payload: {
+                  promptRunId: string;
+                  savedPromptId: string;
+                  originalPrompt: string;
+                  evaluationResult: string | null;
+                  optimizedPrompt: string;
+                  evaluateModelId: string | null;
+                  optimizeModelId: string;
+                  evaluateParams: {
+                    temperature?: number;
+                    maxTokens?: number;
+                  } | null;
+                  optimizeParams: {
+                    temperature?: number;
+                    maxTokens?: number;
+                  } | null;
+                  createdAt: string;
+                };
+                signature: string;
+              };
+            };
           };
           requestId?: string;
         },
         'PromptRuntime.post_api_prompt_optimize',
+        Config
+      >;
+    };
+    SavedPrompts: {
+      /**
+       * ---
+       *
+       * [GET]
+       *
+       * **path:** /api/saved-prompts
+       *
+       * ---
+       *
+       * **Query Parameters**
+       * ```ts
+       * type QueryParameters = {
+       *   limit?: number
+       *   cursor?: string
+       * }
+       * ```
+       *
+       * ---
+       *
+       * **Response**
+       * ```ts
+       * type Response = {
+       *   success: true
+       *   data: {
+       *     // [items] start
+       *     // [items] end
+       *     items: Array<{
+       *       id: string
+       *       promptRunId: string
+       *       optimizedPrompt: string
+       *       createdAt: string
+       *     }>
+       *     nextCursor: string | null
+       *   }
+       *   requestId?: string
+       * }
+       * ```
+       */
+      get_api_saved_prompts<
+        Config extends Alova2MethodConfig<{
+          success: true;
+          data: {
+            items: Array<{
+              id: string;
+              promptRunId: string;
+              optimizedPrompt: string;
+              createdAt: string;
+            }>;
+            nextCursor: string | null;
+          };
+          requestId?: string;
+        }> & {
+          params: {
+            limit?: number;
+            cursor?: string;
+          };
+        }
+      >(
+        config: Config
+      ): Alova2Method<
+        {
+          success: true;
+          data: {
+            items: Array<{
+              id: string;
+              promptRunId: string;
+              optimizedPrompt: string;
+              createdAt: string;
+            }>;
+            nextCursor: string | null;
+          };
+          requestId?: string;
+        },
+        'SavedPrompts.get_api_saved_prompts',
+        Config
+      >;
+      /**
+       * ---
+       *
+       * [POST]
+       *
+       * **path:** /api/saved-prompts/retry
+       *
+       * ---
+       *
+       * **RequestBody**
+       * ```ts
+       * type RequestBody = {
+       *   saveDraft: {
+       *     version: 'v1'
+       *     issuedAt: string
+       *     expiresAt: string
+       *     payload: {
+       *       promptRunId: string
+       *       savedPromptId: string
+       *       originalPrompt: string
+       *       evaluationResult: string | null
+       *       optimizedPrompt: string
+       *       evaluateModelId: string | null
+       *       optimizeModelId: string
+       *       evaluateParams: {
+       *         temperature?: number
+       *         maxTokens?: number
+       *       } | null
+       *       optimizeParams: {
+       *         temperature?: number
+       *         maxTokens?: number
+       *       } | null
+       *       createdAt: string
+       *     }
+       *     signature: string
+       *   }
+       * }
+       * ```
+       *
+       * ---
+       *
+       * **Response**
+       * ```ts
+       * type Response = {
+       *   success: true
+       *   data: {
+       *     promptRunId: string
+       *     savedPromptId: string
+       *     saved: true
+       *   }
+       *   requestId?: string
+       * }
+       * ```
+       */
+      post_api_saved_prompts_retry<
+        Config extends Alova2MethodConfig<{
+          success: true;
+          data: {
+            promptRunId: string;
+            savedPromptId: string;
+            saved: true;
+          };
+          requestId?: string;
+        }> & {
+          data: {
+            saveDraft: {
+              version: 'v1';
+              issuedAt: string;
+              expiresAt: string;
+              payload: {
+                promptRunId: string;
+                savedPromptId: string;
+                originalPrompt: string;
+                evaluationResult: string | null;
+                optimizedPrompt: string;
+                evaluateModelId: string | null;
+                optimizeModelId: string;
+                evaluateParams: {
+                  temperature?: number;
+                  maxTokens?: number;
+                } | null;
+                optimizeParams: {
+                  temperature?: number;
+                  maxTokens?: number;
+                } | null;
+                createdAt: string;
+              };
+              signature: string;
+            };
+          };
+        }
+      >(
+        config: Config
+      ): Alova2Method<
+        {
+          success: true;
+          data: {
+            promptRunId: string;
+            savedPromptId: string;
+            saved: true;
+          };
+          requestId?: string;
+        },
+        'SavedPrompts.post_api_saved_prompts_retry',
         Config
       >;
     };

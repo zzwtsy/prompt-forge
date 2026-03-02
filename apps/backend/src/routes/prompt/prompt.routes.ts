@@ -14,6 +14,11 @@ const ResolvedModelSchema = z.object({
   modelName: z.string(),
 });
 
+const PromptCallParamsSchema = z.object({
+  temperature: z.number().min(0).max(2).optional(),
+  maxTokens: z.number().int().positive().optional(),
+});
+
 const EvaluatePromptBodySchema = z.object({
   prompt: z.string().min(1),
   modelId: z.string().optional(),
@@ -32,11 +37,42 @@ const OptimizePromptBodySchema = z.object({
   modelId: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
   maxTokens: z.number().int().positive().optional(),
+  evaluateContext: z.object({
+    modelId: z.string().min(1),
+    temperature: z.number().min(0).max(2).optional(),
+    maxTokens: z.number().int().positive().optional(),
+  }).optional(),
+});
+
+const SignedSaveDraftSchema = z.object({
+  version: z.literal("v1"),
+  issuedAt: z.iso.datetime(),
+  expiresAt: z.iso.datetime(),
+  payload: z.object({
+    promptRunId: z.string(),
+    savedPromptId: z.string(),
+    originalPrompt: z.string(),
+    evaluationResult: z.string().nullable(),
+    optimizedPrompt: z.string(),
+    evaluateModelId: z.string().nullable(),
+    optimizeModelId: z.string(),
+    evaluateParams: PromptCallParamsSchema.nullable(),
+    optimizeParams: PromptCallParamsSchema.nullable(),
+    createdAt: z.iso.datetime(),
+  }),
+  signature: z.string(),
 });
 
 const OptimizePromptResponseSchema = z.object({
   optimizedPrompt: z.string(),
   resolvedModel: ResolvedModelSchema,
+  promptRunId: z.string(),
+  savedPromptId: z.string(),
+  persistence: z.object({
+    saved: z.boolean(),
+    retryable: z.boolean(),
+    saveDraft: SignedSaveDraftSchema.optional(),
+  }),
 });
 
 export const evaluatePromptRoute = createRoute({

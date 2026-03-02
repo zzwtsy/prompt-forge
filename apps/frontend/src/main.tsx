@@ -4,6 +4,8 @@ import ReactDOM from "react-dom/client";
 
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen";
+
+import "@/api";
 import "./index.css";
 
 // Create a new router instance

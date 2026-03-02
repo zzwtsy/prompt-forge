@@ -6,8 +6,8 @@
 
 ### 后端实现状态（按当前代码）
 
-- 已实现：提示词评估与优化接口、模型服务商与模型管理接口、默认评估/优化模型配置、统一鉴权与错误响应。
-- 未实现：优化任务与优化结果持久化（`PromptRun` / `SavedPrompt`）以及 `GET /api/saved-prompts`。
+- 已实现：提示词评估与优化接口、模型服务商与模型管理接口、默认评估/优化模型配置、优化结果保存查询与重试保存链路、统一鉴权与错误响应。
+- 前端待建设：优化结果保存页面（后端接口已提供）。
 
 详细需求见：`docs/requirements.md`。  
 说明：需求文档是目标态定义；README 中“已实现/未实现”按当前仓库后端代码（`apps/backend/src`）标注。
@@ -27,10 +27,10 @@
 | `PO-02` | 已实现 | 支持 `temperature`、`maxTokens`，并映射到 AI SDK 调用参数。 |
 | `PO-03` | 前端范围 | “复制评估结果”属于前端交互能力，不作为后端能力声明。 |
 | `PO-04` | 前端范围 | “复制优化提示词”属于前端交互能力，不作为后端能力声明。 |
-| `PO-05` | 未实现 | 尚未落地 `PromptRun` / `SavedPrompt` 持久化。 |
-| `SP-01` | 未实现 | “优化结果保存页面”对应后端接口与存储未实现。 |
-| `SP-02` | 未实现 | 尚无“仅展示优化后提示词列表”的查询接口实现。 |
-| `SP-03` | 未实现 | 尚无“可追溯到来源优化任务”的后端数据与接口实现。 |
+| `PO-05` | 已实现 | `POST /api/prompt/optimize` 优化后自动尝试保存，持久化 `prompt_runs/saved_prompts`。 |
+| `SP-01` | 前端范围 | “优化结果保存页面”属于前端页面范围；后端接口已提供。 |
+| `SP-02` | 已实现 | `GET /api/saved-prompts` 仅返回优化后提示词列表与分页游标。 |
+| `SP-03` | 已实现 | 返回 `promptRunId`，支持追溯到来源优化任务。 |
 
 ## 后端实现说明
 
@@ -38,10 +38,17 @@
 - 统一响应结构：
   - 成功：`{ success: true, data, requestId? }`
   - 失败：`{ success: false, error: { code, message, details? }, requestId? }`
+- 优化保存链路：
+  - `POST /api/prompt/optimize` 优化成功后自动尝试保存 `prompt_runs/saved_prompts`。
+  - 保存失败时返回 `persistence.saved=false` 与 `saveDraft`（可重试草稿）。
+  - `POST /api/saved-prompts/retry` 支持幂等补保存（不重复调用模型）。
+- Prompt 优化接口补充：
+  - 请求支持可选 `evaluateContext`。
+  - 响应包含 `promptRunId`、`savedPromptId`、`persistence`（`saveDraft` 可选）。
 - 错误码：使用统一 `AppError` + `AppErrorCode` 体系，覆盖认证、参数校验、资源不存在、模型不可用等场景。
 - 密钥安全：Provider `apiKey` 使用 AES-256-GCM 密文存储，接口侧仅返回 `hasApiKey` 与 `apiKeyMasked`。
 - 启动初始化：服务启动时执行幂等 seed，补齐 OpenAI provider 与默认模型配置单例行。
-- 测试现状：后端 Vitest 当前覆盖 7 个测试文件、28 个用例（本地校验通过）。
+- 测试现状：后端 Vitest 当前覆盖 9 个测试文件、38 个用例（当前仓库状态）。
 
 ## 技术栈
 
@@ -81,6 +88,7 @@ cp apps/backend/.env.example apps/backend/.env
 - `BETTER_AUTH_SECRET`：鉴权密钥（至少 32 位）
 - `BETTER_AUTH_URL`：鉴权服务访问地址（本地通常是 `http://localhost:3001`）
 - `AI_PROVIDER_SECRET_KEY`：Provider API Key 加密主密钥（base64）
+- `PROMPT_SAVE_DRAFT_SECRET`：保存草稿签名密钥（用于 `/api/saved-prompts/retry`）
 - `LOG_LEVEL`：日志级别（建议开发环境使用 `debug`）
 
 ### 3. 初始化数据库
@@ -145,15 +153,20 @@ bun run dev:frontend
 - `PUT /api/model-defaults`
 - `POST /api/prompt/evaluate`
 - `POST /api/prompt/optimize`
-
-### 未实现接口（requirements 目标态）
-
 - `GET /api/saved-prompts`
+- `POST /api/saved-prompts/retry`
+
+### 需求外扩展接口
+
+- `POST /api/saved-prompts/retry`：用于“优化成功但保存失败”场景下的补保存能力（幂等重试）。
 
 ## 文档
 
 - `docs/requirements.md`
 - `docs/prompt.md`
+- `docs/backend-flow-overview.md`
+- `docs/model-settings-implementation.md`
+- `docs/prompt-history-implementation.md`
 
 ## License
 

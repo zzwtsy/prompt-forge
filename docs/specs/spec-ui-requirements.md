@@ -7,9 +7,9 @@
 ## 1. 来源对齐说明
 
 - 本文档用于沉淀 UI 实现规格，避免与产品总需求混杂。
-- 本文档与 [requirements.md](/home/vscode/prompt-forge/docs/requirements.md) 对齐，不替代产品需求文档。
+- 本文档与 [spec-product-requirements.md](./spec-product-requirements.md) 对齐，不替代产品需求文档。
 - 本文档是 UI 交付规格，按“当前代码基线 + 目标实现”双视角描述。
-- 历史搜索扩展能力依赖 [extension-requirements.md](/home/vscode/prompt-forge/docs/extension-requirements.md) 的增量定义。
+- 历史搜索扩展能力依赖 [spec-extension-history-search.md](./spec-extension-history-search.md) 的增量定义。
 
 ## 2. 背景与目标
 
@@ -203,7 +203,7 @@
 - 扩展目标：`GET /api/saved-prompts` 支持 `query?` 参数。
 - 目标查询参数：`{ limit?: number; cursor?: string; query?: string }`。
 - 搜索目标字段为 `optimizedPrompt`。
-- 该能力依赖 [extension-requirements.md](/home/vscode/prompt-forge/docs/extension-requirements.md) 落地。
+- 该能力依赖 [spec-extension-history-search.md](./spec-extension-history-search.md) 落地。
 
 ### 8.4 降级触发与退出条件
 

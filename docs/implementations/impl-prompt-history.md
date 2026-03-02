@@ -187,7 +187,7 @@ type SignedSaveDraft = {
 
 ## 6. 实现步骤（文件级）
 
-1. 新增文档：`docs/prompt-history-implementation.md`（当前文件）。
+1. 新增文档：`docs/implementations/impl-prompt-history.md`（当前文件）。
 2. 新增 schema：
    - `apps/backend/src/db/schemas/prompt-run-schema.ts`
    - `apps/backend/src/db/schemas/saved-prompt-schema.ts`

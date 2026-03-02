@@ -251,9 +251,9 @@ sequenceDiagram
 
 ## 10. 相关文档链接
 
-- `docs/requirements.md`
-- `docs/model-settings-implementation.md`
-- `docs/prompt-history-implementation.md`
+- `docs/specs/spec-product-requirements.md`
+- `docs/implementations/impl-model-settings.md`
+- `docs/implementations/impl-prompt-history.md`
 
 ## 更新触发条件
 

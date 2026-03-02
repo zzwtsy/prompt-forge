@@ -4,7 +4,7 @@
 
 - 目标：为“模型设置页面 + 评估/优化运行时模型选择”提供可直接手写实现的后端实施蓝图。
 - 范围：仅定义实现方案，不包含代码改动执行。
-- 约束：实施方案遵循 `docs/backend-conventions.md` 的后端规范（路由组织、OpenAPI、事务、注释）。
+- 约束：后端任务入口规范以仓库根 `AGENTS.md` 为准，并以 `.agents/skills/backend-conventions/SKILL.md` 作为实现执行指南（若冲突以 `AGENTS.md` 为准）。
 
 ## 2. 已锁定实现决策
 
@@ -205,7 +205,7 @@ baseUrl 规则：
 
 ## 10. 事务与错误码约定
 
-事务规范沿用 `docs/backend-conventions.md` 第 3 节，这里仅列出与本方案相关的业务错误码。
+事务规范沿用 `AGENTS.md` 与 `.agents/skills/backend-conventions/SKILL.md` 中的事务与错误处理约定，这里仅列出与本方案相关的业务错误码。
 
 错误码建议：
 

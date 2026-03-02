@@ -9,10 +9,10 @@
 - 已实现：提示词评估与优化接口、模型服务商与模型管理接口、默认评估/优化模型配置、优化结果保存查询与重试保存链路、统一鉴权与错误响应。
 - 前端待建设：优化结果保存页面（后端接口已提供）。
 
-详细需求见：`docs/requirements.md`。  
+详细需求见：`docs/specs/spec-product-requirements.md`。  
 说明：需求文档是目标态定义；README 中“已实现/未实现”按当前仓库后端代码（`apps/backend/src`）标注。
 
-## 后端能力实现矩阵（对齐 requirements.md）
+## 后端能力实现矩阵（对齐 spec-product-requirements.md）
 
 | 需求编号 | 状态 | 后端实现说明 |
 | --- | --- | --- |
@@ -162,11 +162,14 @@ bun run dev:frontend
 
 ## 文档
 
-- `docs/requirements.md`
-- `docs/prompt.md`
-- `docs/backend-flow-overview.md`
-- `docs/model-settings-implementation.md`
-- `docs/prompt-history-implementation.md`
+- `docs/README.md`
+- `docs/specs/spec-product-requirements.md`
+- `docs/specs/spec-ui-requirements.md`
+- `docs/specs/spec-extension-history-search.md`
+- `docs/implementations/impl-model-settings.md`
+- `docs/implementations/impl-prompt-history.md`
+- `docs/references/reference-backend-flow-overview.md`
+- `docs/assets/asset-prompt-evaluation-and-refinement.md`
 
 ## License
 

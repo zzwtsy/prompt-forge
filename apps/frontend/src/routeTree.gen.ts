@@ -12,9 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedOptimizeRouteImport } from './routes/_authenticated/optimize'
+import { Route as AuthenticatedModelsRouteImport } from './routes/_authenticated/models'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
-import { Route as AuthenticatedAuthenticatedOptimizeRouteImport } from './routes/_authenticated/_authenticated.optimize'
-import { Route as AuthenticatedAuthenticatedModelsRouteImport } from './routes/_authenticated/_authenticated.models'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -30,37 +30,35 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedOptimizeRoute = AuthenticatedOptimizeRouteImport.update({
+  id: '/optimize',
+  path: '/optimize',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedModelsRoute = AuthenticatedModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
   id: '/history',
   path: '/history',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedAuthenticatedOptimizeRoute =
-  AuthenticatedAuthenticatedOptimizeRouteImport.update({
-    id: '/_authenticated/optimize',
-    path: '/optimize',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAuthenticatedModelsRoute =
-  AuthenticatedAuthenticatedModelsRouteImport.update({
-    id: '/_authenticated/models',
-    path: '/models',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/history': typeof AuthenticatedHistoryRoute
-  '/models': typeof AuthenticatedAuthenticatedModelsRoute
-  '/optimize': typeof AuthenticatedAuthenticatedOptimizeRoute
+  '/models': typeof AuthenticatedModelsRoute
+  '/optimize': typeof AuthenticatedOptimizeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/history': typeof AuthenticatedHistoryRoute
-  '/models': typeof AuthenticatedAuthenticatedModelsRoute
-  '/optimize': typeof AuthenticatedAuthenticatedOptimizeRoute
+  '/models': typeof AuthenticatedModelsRoute
+  '/optimize': typeof AuthenticatedOptimizeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,8 +66,8 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
-  '/_authenticated/_authenticated/models': typeof AuthenticatedAuthenticatedModelsRoute
-  '/_authenticated/_authenticated/optimize': typeof AuthenticatedAuthenticatedOptimizeRoute
+  '/_authenticated/models': typeof AuthenticatedModelsRoute
+  '/_authenticated/optimize': typeof AuthenticatedOptimizeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -82,8 +80,8 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/_authenticated/history'
-    | '/_authenticated/_authenticated/models'
-    | '/_authenticated/_authenticated/optimize'
+    | '/_authenticated/models'
+    | '/_authenticated/optimize'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -115,6 +113,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/optimize': {
+      id: '/_authenticated/optimize'
+      path: '/optimize'
+      fullPath: '/optimize'
+      preLoaderRoute: typeof AuthenticatedOptimizeRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/models': {
+      id: '/_authenticated/models'
+      path: '/models'
+      fullPath: '/models'
+      preLoaderRoute: typeof AuthenticatedModelsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/history': {
       id: '/_authenticated/history'
       path: '/history'
@@ -122,34 +134,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHistoryRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/_authenticated/optimize': {
-      id: '/_authenticated/_authenticated/optimize'
-      path: '/optimize'
-      fullPath: '/optimize'
-      preLoaderRoute: typeof AuthenticatedAuthenticatedOptimizeRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/_authenticated/models': {
-      id: '/_authenticated/_authenticated/models'
-      path: '/models'
-      fullPath: '/models'
-      preLoaderRoute: typeof AuthenticatedAuthenticatedModelsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
-  AuthenticatedAuthenticatedModelsRoute: typeof AuthenticatedAuthenticatedModelsRoute
-  AuthenticatedAuthenticatedOptimizeRoute: typeof AuthenticatedAuthenticatedOptimizeRoute
+  AuthenticatedModelsRoute: typeof AuthenticatedModelsRoute
+  AuthenticatedOptimizeRoute: typeof AuthenticatedOptimizeRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
-  AuthenticatedAuthenticatedModelsRoute: AuthenticatedAuthenticatedModelsRoute,
-  AuthenticatedAuthenticatedOptimizeRoute:
-    AuthenticatedAuthenticatedOptimizeRoute,
+  AuthenticatedModelsRoute: AuthenticatedModelsRoute,
+  AuthenticatedOptimizeRoute: AuthenticatedOptimizeRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

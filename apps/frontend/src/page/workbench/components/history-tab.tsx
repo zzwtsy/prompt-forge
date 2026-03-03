@@ -1,6 +1,7 @@
 import type { NoticeInput, RequestErrorOptions, SavedPromptItem } from "../types";
+import { useRequest } from "alova/client";
 import { Copy, Loader2, Search } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { HISTORY_PAGE_LIMIT } from "../constants";
-import { fetchSavedPrompts } from "../services/saved-prompts.service";
+import { savedPromptsMethods } from "../services/saved-prompts.service";
 import {
   createSnippet,
   dedupeSavedPromptItems,
@@ -27,12 +28,33 @@ interface HistoryTabProps {
   onShowNotice: (notice: NoticeInput) => void;
 }
 
+interface SavedPromptsPageData {
+  items: SavedPromptItem[];
+  nextCursor: string | null;
+}
+
+function unwrapResponseData<T>(response: T | { data: T }): T {
+  return (typeof response === "object" && response !== null && "data" in response)
+    ? response.data as T
+    : response;
+}
+
 export function HistoryTab(props: HistoryTabProps) {
   const {
     refreshToken,
     onRequestError,
     onShowNotice,
   } = props;
+
+  const {
+    send: sendQuerySavedPrompts,
+  } = useRequest((params: { limit: number; cursor?: string }) => savedPromptsMethods.querySavedPrompts(params), {
+    immediate: false,
+  });
+  const sendQuerySavedPromptsRef = useRef(sendQuerySavedPrompts);
+  useEffect(() => {
+    sendQuerySavedPromptsRef.current = sendQuerySavedPrompts;
+  }, [sendQuerySavedPrompts]);
 
   const [items, setItems] = useState<SavedPromptItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -42,8 +64,11 @@ export function HistoryTab(props: HistoryTabProps) {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const loadHistory = useCallback(async (reset: boolean) => {
-    const cursor = reset ? undefined : nextCursor ?? undefined;
+  const loadHistory = useCallback(async (options: {
+    reset: boolean;
+    cursor?: string;
+  }) => {
+    const { reset, cursor } = options;
 
     try {
       if (reset) {
@@ -52,10 +77,11 @@ export function HistoryTab(props: HistoryTabProps) {
         setLoadingMore(true);
       }
 
-      const data = await fetchSavedPrompts({
+      const response = await sendQuerySavedPromptsRef.current({
         limit: HISTORY_PAGE_LIMIT,
         cursor,
       });
+      const data = unwrapResponseData<SavedPromptsPageData>(response);
 
       if (reset) {
         setItems(data.items);
@@ -73,10 +99,10 @@ export function HistoryTab(props: HistoryTabProps) {
       setInitialLoading(false);
       setLoadingMore(false);
     }
-  }, [nextCursor, onRequestError]);
+  }, [onRequestError]);
 
   useEffect(() => {
-    void loadHistory(true);
+    void loadHistory({ reset: true });
   }, [loadHistory, refreshToken]);
 
   const filteredItems = useMemo(() => {
@@ -100,12 +126,6 @@ export function HistoryTab(props: HistoryTabProps) {
 
     return filteredItems.find(item => item.id === selectedItemId) ?? filteredItems[0];
   }, [filteredItems, selectedItemId]);
-
-  useEffect(() => {
-    if (!selectedItem && filteredItems.length > 0) {
-      setSelectedItemId(filteredItems[0].id);
-    }
-  }, [filteredItems, selectedItem]);
 
   const copyHistoryPrompt = async (text: string) => {
     try {
@@ -207,7 +227,10 @@ export function HistoryTab(props: HistoryTabProps) {
               variant="outline"
               disabled={nextCursor === null || loadingMore || initialLoading}
               onClick={() => {
-                void loadHistory(false);
+                void loadHistory({
+                  reset: false,
+                  cursor: nextCursor ?? undefined,
+                });
               }}
             >
               {loadingMore && <Loader2 className="mr-1 size-4 animate-spin" />}

@@ -1,9 +1,12 @@
 import type {
+  EvaluateResponseData,
   NoticeInput,
+  OptimizeResponseData,
   ProviderItem,
   RequestErrorOptions,
   SignedSaveDraft,
 } from "../types";
+import { useRequest } from "alova/client";
 import { Copy, Loader2, Save, WandSparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -27,11 +30,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { MODEL_DEFAULT_OPTION } from "../constants";
-import {
-  evaluatePrompt,
-  optimizePrompt,
-} from "../services/prompt-runtime.service";
-import { retrySavePrompt } from "../services/saved-prompts.service";
+import { promptRuntimeMethods } from "../services/prompt-runtime.service";
+import { savedPromptsMethods } from "../services/saved-prompts.service";
 import {
   getEnabledModelOptions,
   hasField,
@@ -54,6 +54,12 @@ interface OptimizeFieldErrors {
   evaluateMaxTokens?: boolean;
   optimizeTemperature?: boolean;
   optimizeMaxTokens?: boolean;
+}
+
+function unwrapResponseData<T>(response: T | { data: T }): T {
+  return (typeof response === "object" && response !== null && "data" in response)
+    ? response.data as T
+    : response;
 }
 
 export function OptimizeTab(props: OptimizeTabProps) {
@@ -89,9 +95,42 @@ export function OptimizeTab(props: OptimizeTabProps) {
   const [saveDraft, setSaveDraft] = useState<SignedSaveDraft | null>(null);
   const [fieldErrors, setFieldErrors] = useState<OptimizeFieldErrors>({});
 
-  const [evaluatePending, setEvaluatePending] = useState(false);
-  const [optimizePending, setOptimizePending] = useState(false);
-  const [retryPending, setRetryPending] = useState(false);
+  const {
+    loading: evaluatePending,
+    send: sendEvaluate,
+  } = useRequest((payload: {
+    prompt: string;
+    modelId?: string;
+    temperature?: number;
+    maxTokens?: number;
+  }) => promptRuntimeMethods.evaluate(payload), {
+    immediate: false,
+  });
+
+  const {
+    loading: optimizePending,
+    send: sendOptimize,
+  } = useRequest((payload: {
+    prompt: string;
+    evaluationResult?: string;
+    modelId?: string;
+    temperature?: number;
+    maxTokens?: number;
+    evaluateContext?: {
+      modelId: string;
+      temperature?: number;
+      maxTokens?: number;
+    };
+  }) => promptRuntimeMethods.optimize(payload), {
+    immediate: false,
+  });
+
+  const {
+    loading: retryPending,
+    send: sendRetrySave,
+  } = useRequest((draft: SignedSaveDraft) => savedPromptsMethods.retrySavePrompt(draft), {
+    immediate: false,
+  });
 
   const modelOptions = useMemo(() => {
     return getEnabledModelOptions(providers);
@@ -142,8 +181,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
     }
 
     try {
-      setEvaluatePending(true);
-
       const payload: {
         prompt: string;
         modelId?: string;
@@ -165,7 +202,7 @@ export function OptimizeTab(props: OptimizeTabProps) {
         payload.maxTokens = parsedEvaluateMaxTokens;
       }
 
-      const data = await evaluatePrompt(payload);
+      const data = unwrapResponseData<EvaluateResponseData>(await sendEvaluate(payload));
 
       setEvaluationResult(data.evaluationResult);
       setEvaluateResolvedModel(data.resolvedModel);
@@ -201,8 +238,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
           setFieldErrors(prev => ({ ...prev, ...mapped }));
         },
       });
-    } finally {
-      setEvaluatePending(false);
     }
   };
 
@@ -241,8 +276,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
     }
 
     try {
-      setOptimizePending(true);
-
       const payload: {
         prompt: string;
         evaluationResult?: string;
@@ -278,7 +311,7 @@ export function OptimizeTab(props: OptimizeTabProps) {
         payload.maxTokens = parsedOptimizeMaxTokens;
       }
 
-      const data = await optimizePrompt(payload);
+      const data = unwrapResponseData<OptimizeResponseData>(await sendOptimize(payload));
 
       setOptimizedPrompt(data.optimizedPrompt);
       setOptimizeResolvedModel(data.resolvedModel);
@@ -318,8 +351,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
           setFieldErrors(prev => ({ ...prev, ...mapped }));
         },
       });
-    } finally {
-      setOptimizePending(false);
     }
   };
 
@@ -329,8 +360,7 @@ export function OptimizeTab(props: OptimizeTabProps) {
     }
 
     try {
-      setRetryPending(true);
-      await retrySavePrompt(saveDraft);
+      await sendRetrySave(saveDraft);
 
       setSaveDraft(null);
       onPersistedHistory();
@@ -343,8 +373,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
       onRequestError(error, {
         fallbackTitle: "保存失败",
       });
-    } finally {
-      setRetryPending(false);
     }
   };
 

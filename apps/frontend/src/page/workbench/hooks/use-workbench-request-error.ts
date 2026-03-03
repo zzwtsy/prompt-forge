@@ -15,7 +15,7 @@ interface UseRequestErrorOptions {
   redirectToLogin: () => void;
 }
 
-export function useRequestError(options: UseRequestErrorOptions) {
+export function useWorkbenchRequestError(options: UseRequestErrorOptions) {
   const { showNotice, navigateToTab, redirectToLogin } = options;
 
   const handleRequestError = useCallback((error: unknown, requestOptions: RequestErrorOptions) => {

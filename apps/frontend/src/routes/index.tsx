@@ -18,15 +18,5 @@ export const Route = createFileRoute("/")({
       },
     });
   },
-  component: IndexRouteComponent,
+  component: AuthLoadingScreen,
 });
-
-function IndexRouteComponent() {
-  const { auth } = Route.useRouteContext();
-
-  if (auth.isPending) {
-    return <AuthLoadingScreen />;
-  }
-
-  return null;
-}

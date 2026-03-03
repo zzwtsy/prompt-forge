@@ -1,29 +1,58 @@
-import type { GlobalNotice, ModelDefaultsData, NoticeInput, ProviderItem, WorkbenchTab } from "@/features/workbench/types";
+import type { GlobalNotice, ModelDefaultsData, NoticeInput, ProviderItem, WorkbenchTab } from "./types";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { HistoryTab } from "@/features/workbench/components/history-tab";
-import { ModelSettingsTab } from "@/features/workbench/components/model-settings-tab";
-import { NoticeBanner } from "@/features/workbench/components/notice-banner";
-import { OptimizeTab } from "@/features/workbench/components/optimize-tab";
-import { WORKBENCH_TAB_PATHS, WORKBENCH_TABS } from "@/features/workbench/constants";
-import { useRequestError } from "@/features/workbench/hooks/use-request-error";
-import { fetchModelSettings } from "@/features/workbench/services/model-settings.service";
-import { getWorkbenchTabFromPathname, tabLabel } from "@/features/workbench/utils";
+import { useRequest } from "alova/client";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildLoginRedirectTarget } from "@/lib/auth-redirect";
 import { cn } from "@/lib/utils";
+import { HistoryTab } from "./components/history-tab";
+import { ModelSettingsTab } from "./components/model-settings-tab";
+import { NoticeBanner } from "./components/notice-banner";
+import { OptimizeTab } from "./components/optimize-tab";
+import { WORKBENCH_TAB_PATHS, WORKBENCH_TABS } from "./constants";
+import { useWorkbenchRequestError } from "./hooks/use-workbench-request-error";
+import { modelSettingsMethods } from "./services/model-settings.service";
+import { getWorkbenchTabFromPathname, tabLabel } from "./utils";
 
-export function WorkbenchLayout() {
+const EMPTY_DEFAULTS: ModelDefaultsData = {
+  evaluateModelId: null,
+  optimizeModelId: null,
+};
+
+function unwrapResponseData<T>(response: T | { data: T } | undefined): T | undefined {
+  if (response === undefined) {
+    return undefined;
+  }
+
+  return (typeof response === "object" && response !== null && "data" in response)
+    ? response.data as T
+    : response;
+}
+
+export function WorkbenchPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [notice, setNotice] = useState<GlobalNotice | null>(null);
-  const [providers, setProviders] = useState<ProviderItem[]>([]);
-  const [defaults, setDefaults] = useState<ModelDefaultsData>({
-    evaluateModelId: null,
-    optimizeModelId: null,
-  });
-  const [settingsLoading, setSettingsLoading] = useState(true);
   const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
+
+  const {
+    data: providersResponse,
+    loading: providersLoading,
+    error: providersError,
+    send: refreshProviders,
+  } = useRequest(() => modelSettingsMethods.queryProviders(), { immediate: true });
+
+  const {
+    data: defaultsData,
+    loading: defaultsLoading,
+    error: defaultsError,
+    send: refreshDefaults,
+  } = useRequest(() => modelSettingsMethods.queryDefaults(), { immediate: true });
+
+  const providersData = unwrapResponseData<{ providers: ProviderItem[] }>(providersResponse);
+  const providers = providersData?.providers ?? [];
+  const defaults = unwrapResponseData<ModelDefaultsData>(defaultsData) ?? EMPTY_DEFAULTS;
+  const settingsLoading = providersLoading || defaultsLoading;
 
   const activeTab = useMemo(() => {
     return getWorkbenchTabFromPathname(location.pathname);
@@ -52,22 +81,18 @@ export function WorkbenchLayout() {
     });
   }, [location, navigate]);
 
-  const { handleRequestError } = useRequestError({
+  const { handleRequestError } = useWorkbenchRequestError({
     showNotice,
     navigateToTab,
     redirectToLogin,
   });
 
   const refreshModelSettings = useCallback(async (silent = false) => {
-    if (!silent) {
-      setSettingsLoading(true);
-    }
-
     try {
-      const data = await fetchModelSettings();
-
-      setProviders(data.providers);
-      setDefaults(data.defaults);
+      await Promise.all([
+        refreshProviders(),
+        refreshDefaults(),
+      ]);
       return true;
     } catch (error) {
       if (!silent) {
@@ -76,16 +101,21 @@ export function WorkbenchLayout() {
         });
       }
       return false;
-    } finally {
-      if (!silent) {
-        setSettingsLoading(false);
-      }
     }
-  }, [handleRequestError]);
+  }, [handleRequestError, refreshDefaults, refreshProviders]);
 
+  const lastInitialErrorRef = useRef<unknown>(null);
   useEffect(() => {
-    void refreshModelSettings(false);
-  }, [refreshModelSettings]);
+    const error = providersError ?? defaultsError;
+    if (error == null || lastInitialErrorRef.current === error) {
+      return;
+    }
+
+    lastInitialErrorRef.current = error;
+    handleRequestError(error, {
+      fallbackTitle: "加载模型设置失败",
+    });
+  }, [defaultsError, handleRequestError, providersError]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_18%_20%,rgba(239,246,255,0.95),transparent_45%),radial-gradient(circle_at_80%_0%,rgba(236,253,245,0.9),transparent_40%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]">

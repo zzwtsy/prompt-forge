@@ -65,7 +65,13 @@ export function unwrapApiEnvelope<T>(value: unknown): T {
     throw new ApiEnvelopeError(value.error.code, value.error.message, value.error.details);
   }
 
-  throw new Error("接口返回格式异常，请稍后重试");
+  if (isObject(value) && "success" in value) {
+    throw new Error("接口返回格式异常，请稍后重试");
+  }
+
+  // Backward-compatible passthrough: allows service calls to keep unwrap logic
+  // while alova `responded` may already have unwrapped the envelope.
+  return value as T;
 }
 
 export interface NormalizedClientError {

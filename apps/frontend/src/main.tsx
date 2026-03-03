@@ -1,8 +1,7 @@
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { AppRouter } from "@/app-router";
-
-import { AuthProvider } from "@/lib/auth-provider";
+import { AuthProvider } from "@/lib/context/auth";
 import "@/api";
 import "./index.css";
 

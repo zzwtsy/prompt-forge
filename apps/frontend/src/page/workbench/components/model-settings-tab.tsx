@@ -5,8 +5,9 @@ import type {
   ProviderItem,
   RequestErrorOptions,
 } from "../types";
+import { useRequest } from "alova/client";
 import { Loader2, Plus, RefreshCw } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -37,14 +38,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { MODEL_NONE_OPTION } from "../constants";
-import {
-  createModel,
-  createOpenAICompatibleProvider,
-  saveModel,
-  saveModelDefaults,
-  saveProviderSettings,
-  syncProviderModels,
-} from "../services/model-settings.service";
+import { modelSettingsMethods } from "../services/model-settings.service";
 import {
   getEnabledModelOptions,
   hasField,
@@ -68,6 +62,24 @@ interface ModelSettingsValidationErrors {
   addModelName?: boolean;
 }
 
+interface ProviderFormDraft {
+  name: string;
+  baseUrl: string;
+  apiKey: string;
+  enabled: boolean;
+  clearApiKey: boolean;
+}
+
+function createProviderDraft(provider: ProviderItem): ProviderFormDraft {
+  return {
+    name: provider.name,
+    baseUrl: provider.baseUrl,
+    apiKey: "",
+    enabled: provider.enabled,
+    clearApiKey: false,
+  };
+}
+
 export function ModelSettingsTab(props: ModelSettingsTabProps) {
   const {
     providers,
@@ -79,15 +91,11 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
   } = props;
 
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
-
-  const [defaultEvaluateModelId, setDefaultEvaluateModelId] = useState<string>(MODEL_NONE_OPTION);
-  const [defaultOptimizeModelId, setDefaultOptimizeModelId] = useState<string>(MODEL_NONE_OPTION);
-
-  const [providerName, setProviderName] = useState("");
-  const [providerBaseUrl, setProviderBaseUrl] = useState("");
-  const [providerApiKey, setProviderApiKey] = useState("");
-  const [providerEnabled, setProviderEnabled] = useState(false);
-  const [clearProviderApiKey, setClearProviderApiKey] = useState(false);
+  const [defaultsDraft, setDefaultsDraft] = useState<{
+    evaluateModelId: string;
+    optimizeModelId: string;
+  } | null>(null);
+  const [providerDrafts, setProviderDrafts] = useState<Record<string, ProviderFormDraft>>({});
 
   const [providerSearch, setProviderSearch] = useState("");
   const [modelSearch, setModelSearch] = useState("");
@@ -103,14 +111,72 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
   const [addModelDisplayName, setAddModelDisplayName] = useState("");
 
   const [validationErrors, setValidationErrors] = useState<ModelSettingsValidationErrors>({});
+  const [togglingModelIds, setTogglingModelIds] = useState<Set<string>>(() => new Set());
+  const [savingDisplayNameIds, setSavingDisplayNameIds] = useState<Set<string>>(() => new Set());
 
-  const [savingDefaults, setSavingDefaults] = useState(false);
-  const [savingProvider, setSavingProvider] = useState(false);
-  const [syncingModels, setSyncingModels] = useState(false);
-  const [addingProvider, setAddingProvider] = useState(false);
-  const [addingModel, setAddingModel] = useState(false);
-  const [togglingModelIds, setTogglingModelIds] = useState<Set<string>>(new Set());
-  const [savingDisplayNameIds, setSavingDisplayNameIds] = useState<Set<string>>(new Set());
+  const {
+    loading: savingDefaults,
+    send: sendSaveDefaults,
+  } = useRequest((payload: {
+    evaluateModelId: string | null;
+    optimizeModelId: string | null;
+  }) => modelSettingsMethods.saveDefaults(payload), {
+    immediate: false,
+  });
+
+  const {
+    loading: savingProvider,
+    send: sendSaveProviderSettings,
+  } = useRequest((payload: {
+    providerId: string;
+    data: {
+      name: string;
+      baseUrl: string;
+      enabled: boolean;
+      apiKey?: string;
+    };
+  }) => modelSettingsMethods.saveProviderSettings(payload), {
+    immediate: false,
+  });
+
+  const {
+    loading: syncingModels,
+    send: sendSyncProviderModels,
+  } = useRequest((providerId: string) => modelSettingsMethods.syncProviderModels(providerId), {
+    immediate: false,
+  });
+
+  const {
+    loading: addingProvider,
+    send: sendCreateProvider,
+  } = useRequest((payload: {
+    name: string;
+    baseUrl: string;
+    apiKey?: string;
+  }) => modelSettingsMethods.createOpenAICompatibleProvider(payload), {
+    immediate: false,
+  });
+
+  const {
+    loading: addingModel,
+    send: sendCreateModel,
+  } = useRequest((payload: {
+    providerId: string;
+    modelName: string;
+    displayName?: string;
+  }) => modelSettingsMethods.createModel(payload), {
+    immediate: false,
+  });
+
+  const { send: sendSaveModel } = useRequest((payload: {
+    modelId: string;
+    data: {
+      enabled?: boolean;
+      displayName?: string | null;
+    };
+  }) => modelSettingsMethods.saveModel(payload), {
+    immediate: false,
+  });
 
   const sortedProviders = useMemo(() => {
     return [...providers].sort((left, right) => {
@@ -120,6 +186,18 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
       return left.name.localeCompare(right.name, "zh-CN");
     });
   }, [providers]);
+
+  const activeProviderId = useMemo(() => {
+    if (sortedProviders.length === 0) {
+      return null;
+    }
+
+    if (selectedProviderId !== null && sortedProviders.some(provider => provider.id === selectedProviderId)) {
+      return selectedProviderId;
+    }
+
+    return sortedProviders[0].id;
+  }, [selectedProviderId, sortedProviders]);
 
   const filteredProviders = useMemo(() => {
     const keyword = providerSearch.trim().toLowerCase();
@@ -135,12 +213,20 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
   }, [providerSearch, sortedProviders]);
 
   const selectedProvider = useMemo(() => {
-    if (selectedProviderId === null) {
+    if (activeProviderId === null) {
       return null;
     }
 
-    return providers.find(provider => provider.id === selectedProviderId) ?? null;
-  }, [providers, selectedProviderId]);
+    return providers.find(provider => provider.id === activeProviderId) ?? null;
+  }, [activeProviderId, providers]);
+
+  const selectedProviderDraft = useMemo(() => {
+    if (selectedProvider === null) {
+      return null;
+    }
+
+    return providerDrafts[selectedProvider.id] ?? createProviderDraft(selectedProvider);
+  }, [providerDrafts, selectedProvider]);
 
   const sortedModels = useMemo(() => {
     if (!selectedProvider) {
@@ -172,39 +258,24 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
     return getEnabledModelOptions(providers);
   }, [providers]);
 
-  useEffect(() => {
-    if (sortedProviders.length === 0) {
-      setSelectedProviderId(null);
+  const defaultEvaluateModelId = defaultsDraft?.evaluateModelId
+    ?? defaults.evaluateModelId
+    ?? MODEL_NONE_OPTION;
+  const defaultOptimizeModelId = defaultsDraft?.optimizeModelId
+    ?? defaults.optimizeModelId
+    ?? MODEL_NONE_OPTION;
+
+  const updateSelectedProviderDraft = useCallback((updater: (draft: ProviderFormDraft) => ProviderFormDraft) => {
+    if (selectedProvider === null) {
       return;
     }
 
-    if (selectedProviderId === null || !sortedProviders.some(provider => provider.id === selectedProviderId)) {
-      setSelectedProviderId(sortedProviders[0].id);
-    }
-  }, [selectedProviderId, sortedProviders]);
-
-  useEffect(() => {
-    setDefaultEvaluateModelId(defaults.evaluateModelId ?? MODEL_NONE_OPTION);
-    setDefaultOptimizeModelId(defaults.optimizeModelId ?? MODEL_NONE_OPTION);
-  }, [defaults.evaluateModelId, defaults.optimizeModelId]);
-
-  useEffect(() => {
-    if (!selectedProvider) {
-      return;
-    }
-
-    setProviderName(selectedProvider.name);
-    setProviderBaseUrl(selectedProvider.baseUrl);
-    setProviderApiKey("");
-    setProviderEnabled(selectedProvider.enabled);
-    setClearProviderApiKey(false);
-
-    setModelDisplayDrafts((previous) => {
-      const next: Record<string, string> = {};
-      for (const model of selectedProvider.models) {
-        next[model.id] = previous[model.id] ?? model.displayName ?? "";
-      }
-      return next;
+    setProviderDrafts((previous) => {
+      const current = previous[selectedProvider.id] ?? createProviderDraft(selectedProvider);
+      return {
+        ...previous,
+        [selectedProvider.id]: updater(current),
+      };
     });
   }, [selectedProvider]);
 
@@ -217,16 +288,12 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
 
   const handleSaveDefaults = async () => {
     try {
-      setSavingDefaults(true);
-
-      const data = await saveModelDefaults({
+      await sendSaveDefaults({
         evaluateModelId: defaultEvaluateModelId === MODEL_NONE_OPTION ? null : defaultEvaluateModelId,
         optimizeModelId: defaultOptimizeModelId === MODEL_NONE_OPTION ? null : defaultOptimizeModelId,
       });
 
-      setDefaultEvaluateModelId(data.evaluateModelId ?? MODEL_NONE_OPTION);
-      setDefaultOptimizeModelId(data.optimizeModelId ?? MODEL_NONE_OPTION);
-
+      setDefaultsDraft(null);
       await refreshSettings(true);
 
       onShowNotice({
@@ -238,23 +305,21 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
       onRequestError(error, {
         fallbackTitle: "保存默认模型失败",
       });
-    } finally {
-      setSavingDefaults(false);
     }
   };
 
   const handleSaveProvider = async () => {
-    if (!selectedProvider) {
+    if (!selectedProvider || !selectedProviderDraft) {
       return;
     }
 
     const nextErrors: ModelSettingsValidationErrors = {};
 
-    if (!providerName.trim()) {
+    if (!selectedProviderDraft.name.trim()) {
       nextErrors.providerName = true;
     }
 
-    if (!providerBaseUrl.trim() || !isValidUrl(providerBaseUrl.trim())) {
+    if (!selectedProviderDraft.baseUrl.trim() || !isValidUrl(selectedProviderDraft.baseUrl.trim())) {
       nextErrors.providerBaseUrl = true;
     }
 
@@ -273,30 +338,34 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
     }
 
     try {
-      setSavingProvider(true);
-
       const payload: {
         name: string;
         baseUrl: string;
         enabled: boolean;
         apiKey?: string;
       } = {
-        name: providerName.trim(),
-        baseUrl: providerBaseUrl.trim(),
-        enabled: providerEnabled,
+        name: selectedProviderDraft.name,
+        baseUrl: selectedProviderDraft.baseUrl,
+        enabled: selectedProviderDraft.enabled,
       };
 
-      if (clearProviderApiKey) {
+      if (selectedProviderDraft.clearApiKey) {
         payload.apiKey = "";
-      } else if (providerApiKey.trim()) {
-        payload.apiKey = providerApiKey.trim();
+      } else if (selectedProviderDraft.apiKey.trim()) {
+        payload.apiKey = selectedProviderDraft.apiKey.trim();
       }
 
-      await saveProviderSettings(selectedProvider.id, payload);
+      await sendSaveProviderSettings({
+        providerId: selectedProvider.id,
+        data: payload,
+      });
       await refreshSettings(true);
 
-      setProviderApiKey("");
-      setClearProviderApiKey(false);
+      updateSelectedProviderDraft(previous => ({
+        ...previous,
+        apiKey: "",
+        clearApiKey: false,
+      }));
 
       onShowNotice({
         tone: "success",
@@ -317,8 +386,6 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
           setValidationErrors(previous => ({ ...previous, ...mapped }));
         },
       });
-    } finally {
-      setSavingProvider(false);
     }
   };
 
@@ -328,8 +395,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
     }
 
     try {
-      setSyncingModels(true);
-      await syncProviderModels(selectedProvider.id);
+      await sendSyncProviderModels(selectedProvider.id);
       await refreshSettings(true);
 
       onShowNotice({
@@ -341,8 +407,6 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
       onRequestError(error, {
         fallbackTitle: "同步模型失败",
       });
-    } finally {
-      setSyncingModels(false);
     }
   };
 
@@ -350,8 +414,11 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
     setTogglingModelIds(previous => new Set(previous).add(model.id));
 
     try {
-      await saveModel(model.id, {
-        enabled: !model.enabled,
+      await sendSaveModel({
+        modelId: model.id,
+        data: {
+          enabled: !model.enabled,
+        },
       });
       await refreshSettings(true);
 
@@ -377,10 +444,13 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
     setSavingDisplayNameIds(previous => new Set(previous).add(model.id));
 
     try {
-      const nextDisplayName = (modelDisplayDrafts[model.id] ?? "").trim();
+      const nextDisplayName = (modelDisplayDrafts[model.id] ?? model.displayName ?? "").trim();
 
-      await saveModel(model.id, {
-        displayName: nextDisplayName.length > 0 ? nextDisplayName : null,
+      await sendSaveModel({
+        modelId: model.id,
+        data: {
+          displayName: nextDisplayName.length > 0 ? nextDisplayName : null,
+        },
       });
       await refreshSettings(true);
 
@@ -428,12 +498,10 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
     }
 
     try {
-      setAddingProvider(true);
-
-      await createOpenAICompatibleProvider({
-        name: addProviderName.trim(),
-        baseUrl: addProviderBaseUrl.trim(),
-        apiKey: addProviderApiKey.trim() || undefined,
+      await sendCreateProvider({
+        name: addProviderName,
+        baseUrl: addProviderBaseUrl,
+        apiKey: addProviderApiKey,
       });
 
       setAddProviderOpen(false);
@@ -462,8 +530,6 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
           setValidationErrors(previous => ({ ...previous, ...mapped }));
         },
       });
-    } finally {
-      setAddingProvider(false);
     }
   };
 
@@ -493,11 +559,9 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
     }
 
     try {
-      setAddingModel(true);
-
-      await createModel({
+      await sendCreateModel({
         providerId: selectedProvider.id,
-        modelName: addModelName.trim(),
+        modelName: addModelName,
         displayName: addModelDisplayName.trim() || undefined,
       });
 
@@ -524,8 +588,6 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
           }
         },
       });
-    } finally {
-      setAddingModel(false);
     }
   };
 
@@ -545,7 +607,13 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
         <CardContent className="grid gap-3 md:grid-cols-2">
           <div className="grid gap-2">
             <Label>默认评估模型</Label>
-            <Select value={defaultEvaluateModelId} onValueChange={setDefaultEvaluateModelId}>
+            <Select
+              value={defaultEvaluateModelId}
+              onValueChange={value => setDefaultsDraft(previous => ({
+                evaluateModelId: value,
+                optimizeModelId: previous?.optimizeModelId ?? defaultOptimizeModelId,
+              }))}
+            >
               <SelectTrigger className="w-full bg-white">
                 <SelectValue />
               </SelectTrigger>
@@ -559,7 +627,13 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
           </div>
           <div className="grid gap-2">
             <Label>默认优化模型</Label>
-            <Select value={defaultOptimizeModelId} onValueChange={setDefaultOptimizeModelId}>
+            <Select
+              value={defaultOptimizeModelId}
+              onValueChange={value => setDefaultsDraft(previous => ({
+                evaluateModelId: previous?.evaluateModelId ?? defaultEvaluateModelId,
+                optimizeModelId: value,
+              }))}
+            >
               <SelectTrigger className="w-full bg-white">
                 <SelectValue />
               </SelectTrigger>
@@ -603,7 +677,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
                 onClick={() => setSelectedProviderId(provider.id)}
                 className={cn(
                   "rounded-lg border px-3 py-2 text-left transition",
-                  provider.id === selectedProviderId
+                  provider.id === activeProviderId
                     ? "border-slate-900 bg-slate-900 text-white"
                     : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
                 )}
@@ -612,7 +686,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
                   <p className="truncate text-sm font-medium">{provider.name}</p>
                   <Badge variant={provider.enabled ? "default" : "outline"}>{provider.enabled ? "启用" : "停用"}</Badge>
                 </div>
-                <p className={cn("mt-1 truncate text-xs", provider.id === selectedProviderId ? "text-slate-200" : "text-slate-500")}>{provider.code}</p>
+                <p className={cn("mt-1 truncate text-xs", provider.id === activeProviderId ? "text-slate-200" : "text-slate-500")}>{provider.code}</p>
               </button>
             ))}
           </CardContent>
@@ -623,7 +697,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
             <CardContent className="py-10 text-center text-sm text-slate-500">暂无服务商配置。</CardContent>
           )}
 
-          {selectedProvider && (
+          {selectedProvider && selectedProviderDraft && (
             <>
               <CardHeader>
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -633,10 +707,13 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
                   </div>
                   <Button
                     size="sm"
-                    variant={providerEnabled ? "default" : "outline"}
-                    onClick={() => setProviderEnabled(value => !value)}
+                    variant={selectedProviderDraft.enabled ? "default" : "outline"}
+                    onClick={() => updateSelectedProviderDraft(previous => ({
+                      ...previous,
+                      enabled: !previous.enabled,
+                    }))}
                   >
-                    {providerEnabled ? "已启用" : "已停用"}
+                    {selectedProviderDraft.enabled ? "已启用" : "已停用"}
                   </Button>
                 </div>
               </CardHeader>
@@ -646,10 +723,13 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
                   <div className="grid gap-2">
                     <Label>服务商名称</Label>
                     <Input
-                      value={providerName}
+                      value={selectedProviderDraft.name}
                       aria-invalid={validationErrors.providerName ? "true" : "false"}
                       onChange={(event) => {
-                        setProviderName(event.target.value);
+                        updateSelectedProviderDraft(previous => ({
+                          ...previous,
+                          name: event.target.value,
+                        }));
                         clearValidationError("providerName");
                       }}
                     />
@@ -657,10 +737,13 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
                   <div className="grid gap-2">
                     <Label>BaseURL</Label>
                     <Input
-                      value={providerBaseUrl}
+                      value={selectedProviderDraft.baseUrl}
                       aria-invalid={validationErrors.providerBaseUrl ? "true" : "false"}
                       onChange={(event) => {
-                        setProviderBaseUrl(event.target.value);
+                        updateSelectedProviderDraft(previous => ({
+                          ...previous,
+                          baseUrl: event.target.value,
+                        }));
                         clearValidationError("providerBaseUrl");
                       }}
                     />
@@ -671,10 +754,13 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
                   <Label>API Key</Label>
                   <Input
                     type="password"
-                    value={providerApiKey}
+                    value={selectedProviderDraft.apiKey}
                     onChange={(event) => {
-                      setProviderApiKey(event.target.value);
-                      setClearProviderApiKey(false);
+                      updateSelectedProviderDraft(previous => ({
+                        ...previous,
+                        apiKey: event.target.value,
+                        clearApiKey: false,
+                      }));
                     }}
                     placeholder="留空表示不变"
                   />
@@ -687,11 +773,14 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
                       </span>
                     )}
                     <Button
-                      variant={clearProviderApiKey ? "default" : "outline"}
+                      variant={selectedProviderDraft.clearApiKey ? "default" : "outline"}
                       size="xs"
-                      onClick={() => setClearProviderApiKey(value => !value)}
+                      onClick={() => updateSelectedProviderDraft(previous => ({
+                        ...previous,
+                        clearApiKey: !previous.clearApiKey,
+                      }))}
                     >
-                      {clearProviderApiKey ? "将清空 Key" : "清空 Key"}
+                      {selectedProviderDraft.clearApiKey ? "将清空 Key" : "清空 Key"}
                     </Button>
                   </div>
                 </div>
@@ -757,7 +846,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
 
                           <div className="grid gap-2 md:grid-cols-[1fr_auto]">
                             <Input
-                              value={modelDisplayDrafts[model.id] ?? ""}
+                              value={modelDisplayDrafts[model.id] ?? model.displayName ?? ""}
                               onChange={(event) => {
                                 const nextValue = event.target.value;
                                 setModelDisplayDrafts(previous => ({

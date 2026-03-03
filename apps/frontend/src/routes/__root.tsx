@@ -1,4 +1,4 @@
-import type { AuthSnapshot } from "@/lib/auth-provider";
+import type { AuthSnapshot } from "@/lib/context/auth";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 

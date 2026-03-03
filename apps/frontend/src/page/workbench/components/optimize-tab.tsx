@@ -1,3 +1,4 @@
+import type { OptimizeFieldErrors } from "../context/optimize-session";
 import type {
   EvaluateResponseData,
   NoticeInput,
@@ -8,7 +9,7 @@ import type {
 } from "../types";
 import { useRequest } from "alova/client";
 import { Copy, Loader2, Save, WandSparkles } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { MODEL_DEFAULT_OPTION } from "../constants";
+import { useOptimizeSession } from "../context/optimize-session";
 import { promptRuntimeMethods } from "../services/prompt-runtime.service";
 import { savedPromptsMethods } from "../services/saved-prompts.service";
 import {
@@ -48,14 +50,6 @@ interface OptimizeTabProps {
   onPersistedHistory: () => void;
 }
 
-interface OptimizeFieldErrors {
-  prompt?: boolean;
-  evaluateTemperature?: boolean;
-  evaluateMaxTokens?: boolean;
-  optimizeTemperature?: boolean;
-  optimizeMaxTokens?: boolean;
-}
-
 function unwrapResponseData<T>(response: T | { data: T }): T {
   return (typeof response === "object" && response !== null && "data" in response)
     ? response.data as T
@@ -71,29 +65,36 @@ export function OptimizeTab(props: OptimizeTabProps) {
     onPersistedHistory,
   } = props;
 
-  const [prompt, setPrompt] = useState("");
-  const [evaluateModelId, setEvaluateModelId] = useState(MODEL_DEFAULT_OPTION);
-  const [optimizeModelId, setOptimizeModelId] = useState(MODEL_DEFAULT_OPTION);
-  const [evaluateTemperature, setEvaluateTemperature] = useState("");
-  const [evaluateMaxTokens, setEvaluateMaxTokens] = useState("");
-  const [optimizeTemperature, setOptimizeTemperature] = useState("");
-  const [optimizeMaxTokens, setOptimizeMaxTokens] = useState("");
-  const [evaluationResult, setEvaluationResult] = useState("");
-  const [optimizedPrompt, setOptimizedPrompt] = useState("");
-  const [evaluateResolvedModel, setEvaluateResolvedModel] = useState<{
-    modelName: string;
-    modelId: string;
-  } | null>(null);
-  const [optimizeResolvedModel, setOptimizeResolvedModel] = useState<{
-    modelName: string;
-  } | null>(null);
-  const [evaluateContext, setEvaluateContext] = useState<{
-    modelId: string;
-    temperature?: number;
-    maxTokens?: number;
-  } | null>(null);
-  const [saveDraft, setSaveDraft] = useState<SignedSaveDraft | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<OptimizeFieldErrors>({});
+  const {
+    prompt,
+    setPrompt,
+    evaluateModelId,
+    setEvaluateModelId,
+    optimizeModelId,
+    setOptimizeModelId,
+    evaluateTemperature,
+    setEvaluateTemperature,
+    evaluateMaxTokens,
+    setEvaluateMaxTokens,
+    optimizeTemperature,
+    setOptimizeTemperature,
+    optimizeMaxTokens,
+    setOptimizeMaxTokens,
+    evaluationResult,
+    setEvaluationResult,
+    optimizedPrompt,
+    setOptimizedPrompt,
+    evaluateResolvedModel,
+    setEvaluateResolvedModel,
+    optimizeResolvedModel,
+    setOptimizeResolvedModel,
+    evaluateContext,
+    setEvaluateContext,
+    saveDraft,
+    setSaveDraft,
+    fieldErrors,
+    setFieldErrors,
+  } = useOptimizeSession();
 
   const {
     loading: evaluatePending,

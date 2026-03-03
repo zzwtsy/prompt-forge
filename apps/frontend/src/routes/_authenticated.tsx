@@ -3,7 +3,7 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import { AuthLoadingScreen } from "@/components/auth-loading-screen";
-import { WorkbenchPage } from "@/page/workbench";
+import { WorkbenchLayoutPage } from "@/page/workbench";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) => {
@@ -27,6 +27,6 @@ export const Route = createFileRoute("/_authenticated")({
       return <AuthLoadingScreen />;
     }
 
-    return <WorkbenchPage />;
+    return <WorkbenchLayoutPage />;
   },
 });

@@ -7,6 +7,7 @@
 - [ ] 已确认是否触及生成产物边界（`routeTree.gen.ts`、`src/api/*`）。
 - [ ] 已确认模块落点与命名符合 `page/{module}` 主轴目录约定。
 - [ ] 已确认本次请求场景对应的 alova hook 策略（`useRequest/useWatcher/usePagination/useForm/useFetcher`）。
+- [ ] 已判断当前状态是否真的需要 Context（非高频、非纯页面私有状态）。
 
 ## 2. 开发中清单
 
@@ -25,6 +26,10 @@
 - [ ] 仅在满足“薄 service”条件时新增 `services/*`，无机械转发型封装。
 - [ ] 纯函数已抽离到 `utils.ts`，不依赖 React 生命周期。
 - [ ] 跨组件复用逻辑已沉淀到 hooks。
+- [ ] Context 已按 `context/provider/use-hook` 分文件组织。
+- [ ] 组件层通过 `useXxx` 消费 Context，不直接读写 Context 对象。
+- [ ] Provider 的 `value` 已用 `useMemo` 稳定化，回调已用 `useCallback` 稳定化。
+- [ ] 高频更新场景已评估是否需要拆分 `StateContext/ActionsContext`。
 
 ### 2.3 错误处理与状态
 
@@ -51,6 +56,7 @@
 - [ ] 功能回归已验证（错误码提示、保存重试、历史刷新）。
 - [ ] 已确认未手改 `src/api` 生成文件（仅 `src/api/index.ts` 可维护）。
 - [ ] 已抽查新增/修改文件路径符合 `page/{module}` 与共享目录边界。
+- [ ] 相关 Context 文件无 `react-refresh` 风险写法（Provider 文件仅导出组件）。
 - [ ] 若有规范变更，已同步更新 skill 引用内容。
 
 ## 4. 验收场景清单
@@ -64,3 +70,5 @@
 - [ ] 写后读数据无陈旧显示（已验证失效与重拉路径）。
 - [ ] 本次改动未引入新的 `features` 模块文件。
 - [ ] 新增业务页或新模块符合 `src/page/{module}` 主轴约定。
+- [ ] Provider 外调用 `useXxx` 会抛出明确错误。
+- [ ] Context 更新未引发明显无关重渲染（关键页面抽样验证）。

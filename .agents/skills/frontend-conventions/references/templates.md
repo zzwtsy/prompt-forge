@@ -13,6 +13,7 @@
 - [7. useWatcher 条件查询模板](#tpl-use-watcher)
 - [8. 薄 service 模板（方法工厂）](#tpl-thin-service)
 - [9. request error mapper 模板](#tpl-error-mapper)
+- [10. React Context 标准模板（React 19）](#tpl-react-context)
 
 <a id="tpl-root-redirect"></a>
 
@@ -287,5 +288,167 @@ export function useRequestError(showNotice: (payload: { title: string; message: 
   }, [showNotice]);
 
   return { handleRequestError };
+}
+```
+
+<a id="tpl-react-context"></a>
+
+## 10. React Context 标准模板（React 19）
+
+Context 适用边界：
+
+- 适合跨模块共享、更新频率低或中等的状态。
+- 请求 loading/data/error 不放 Context，优先用 Alova hooks。
+
+### 10.1 基础模板（单 Context）
+
+```ts
+// src/lib/context/auth/auth-context.ts
+import { createContext } from "react";
+
+export interface AuthSnapshot {
+  isAuthenticated: boolean;
+  isPending: boolean;
+  user: unknown | null;
+  session: unknown | null;
+}
+
+export const AuthContext = createContext<AuthSnapshot | null>(null);
+```
+
+```tsx
+// src/lib/context/auth/auth-provider.tsx
+import type { ReactNode } from "react";
+import { useMemo } from "react";
+import { authClient } from "@/lib/auth-client";
+import { AuthContext } from "./auth-context";
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const sessionState = authClient.useSession();
+  const sessionData = sessionState.data;
+
+  const value = useMemo(() => ({
+    isAuthenticated: Boolean(sessionData?.user && sessionData?.session),
+    isPending: sessionState.isPending,
+    user: sessionData?.user ?? null,
+    session: sessionData?.session ?? null,
+  }), [sessionData, sessionState.isPending]);
+
+  return <AuthContext value={value}>{children}</AuthContext>;
+}
+```
+
+```ts
+// src/lib/context/auth/use-auth.ts
+import { use } from "react";
+import { AuthContext } from "./auth-context";
+
+export function useAuth() {
+  const value = use(AuthContext);
+  if (value === null) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+  return value;
+}
+```
+
+### 10.2 按需拆分模板（State + Actions）
+
+升级时机：
+
+- 状态更新频率高，或 Context value 体积大导致无关组件重渲染明显。
+
+```ts
+// src/lib/context/settings/settings-state-context.ts
+import { createContext } from "react";
+
+export interface SettingsState {
+  language: "zh-CN" | "en-US";
+  compactMode: boolean;
+}
+
+export const SettingsStateContext = createContext<SettingsState | null>(null);
+```
+
+```ts
+// src/lib/context/settings/settings-actions-context.ts
+import { createContext } from "react";
+
+export interface SettingsActions {
+  setLanguage: (lang: "zh-CN" | "en-US") => void;
+  toggleCompactMode: () => void;
+}
+
+export const SettingsActionsContext = createContext<SettingsActions | null>(null);
+```
+
+```tsx
+// src/lib/context/settings/settings-provider.tsx
+import type { ReactNode } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { SettingsActionsContext } from "./settings-actions-context";
+import { SettingsStateContext } from "./settings-state-context";
+
+interface SettingsProviderProps {
+  children: ReactNode;
+}
+
+export function SettingsProvider({ children }: SettingsProviderProps) {
+  const [language, setLanguage] = useState<"zh-CN" | "en-US">("zh-CN");
+  const [compactMode, setCompactMode] = useState(false);
+
+  const stateValue = useMemo(() => ({
+    language,
+    compactMode,
+  }), [compactMode, language]);
+
+  const toggleCompactMode = useCallback(() => {
+    setCompactMode(prev => !prev);
+  }, []);
+
+  const actionValue = useMemo(() => ({
+    setLanguage,
+    toggleCompactMode,
+  }), [toggleCompactMode]);
+
+  return (
+    <SettingsActionsContext value={actionValue}>
+      <SettingsStateContext value={stateValue}>
+        {children}
+      </SettingsStateContext>
+    </SettingsActionsContext>
+  );
+}
+```
+
+```ts
+// src/lib/context/settings/use-settings-state.ts
+import { use } from "react";
+import { SettingsStateContext } from "./settings-state-context";
+
+export function useSettingsState() {
+  const value = use(SettingsStateContext);
+  if (value === null) {
+    throw new Error("useSettingsState must be used within SettingsProvider");
+  }
+  return value;
+}
+```
+
+```ts
+// src/lib/context/settings/use-settings-actions.ts
+import { use } from "react";
+import { SettingsActionsContext } from "./settings-actions-context";
+
+export function useSettingsActions() {
+  const value = use(SettingsActionsContext);
+  if (value === null) {
+    throw new Error("useSettingsActions must be used within SettingsProvider");
+  }
+  return value;
 }
 ```

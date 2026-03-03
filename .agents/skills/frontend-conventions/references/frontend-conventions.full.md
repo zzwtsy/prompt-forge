@@ -1,6 +1,6 @@
 # Frontend 开发规范
 
-- 版本：`v1.2`
+- 版本：`v1.3`
 - 同步日期：`2026-03-03`
 - 对齐基线：`apps/frontend` 当前技术栈（React 19 + TanStack Router + Alova + Tailwind v4 + shadcn/ui）
 
@@ -11,9 +11,10 @@
 - [2. 页面解耦与目录分层规范](#full-layering)
 - [3. Alova 与 ApiEnvelope 规范](#full-api)
 - [4. 状态管理与会话保留规范](#full-state)
-- [5. 组件与样式规范](#full-ui)
-- [6. 质量门槛与验证命令](#full-quality)
-- [7. PR 与评审关注点](#full-review)
+- [5. React Context 规范](#full-context)
+- [6. 组件与样式规范](#full-ui)
+- [7. 质量门槛与验证命令](#full-quality)
+- [8. PR 与评审关注点](#full-review)
 
 <a id="full-positioning"></a>
 
@@ -186,9 +187,55 @@ src/
 - 对集合型异步状态（如操作中的 id 集）使用 `Set`，更新时创建新实例保证响应性。
 - 需要重刷子页面时使用显式 token（如 `refreshToken`）而非隐式副作用。
 
+<a id="full-context"></a>
+
+## 5. React Context 规范
+
+### 5.1 使用边界（MUST）
+
+- Context 仅用于跨页面/跨模块共享、更新频率低或中等的状态（如认证、主题、全局配置）。
+- 高变更频率状态（输入框实时值、滚动位移、动画帧状态）禁止放入 Context。
+- 请求数据状态优先使用 Alova hooks；Context 仅承载跨组件共享的会话级派生状态。
+
+### 5.2 目录与命名（MUST）
+
+- 全局 Context 放在 `src/lib/context/{domain}/`。
+- 页面私有 Context 放在 `src/page/{module}/context/`。
+- 文件拆分职责：
+  - `xxx-context.ts`：`createContext` 与类型定义。
+  - `xxx-provider.tsx`：仅 Provider 组件。
+  - `use-xxx.ts`：消费 hook。
+
+### 5.3 API 设计（MUST）
+
+- Context 声明统一使用 `createContext<T | null>(null)`。
+- 统一通过 `useXxx` 暴露消费入口，业务代码禁止直接消费原 Context 对象。
+- `useXxx` 在无 Provider 时必须抛出明确错误信息。
+
+### 5.4 React 19 风格（项目默认）
+
+- 主推 `use(Context)` 与 `<Context value={value}>`。
+- 允许 `useContext`/`<Context.Provider>` 作为兼容写法，但规范示例统一使用 React 19 风格。
+
+### 5.5 性能与拆分（MUST/SHOULD）
+
+- Provider 的 `value` 必须 `useMemo` 稳定化。
+- 下发给子组件的函数必须 `useCallback` 稳定化。
+- 高频更新或大对象场景建议按需拆分 `StateContext + ActionsContext`，降低无关重渲染。
+
+### 5.6 与现有规范联动
+
+- Route 薄壳不承载 Context 业务实现细节，仅消费已装配的快照（如 auth snapshot）。
+- 错误链路保持 `normalizeClientError`，Context 不重复实现错误提示分发逻辑。
+
+禁止项：
+
+- Provider 文件同时导出非组件函数（规避 `react-refresh/only-export-components` 风险）。
+- 在多个页面重复创建语义相同的全局 Context。
+
 <a id="full-ui"></a>
 
-## 5. 组件与样式规范
+## 6. 组件与样式规范
 
 统一约束：
 
@@ -205,7 +252,7 @@ src/
 
 <a id="full-quality"></a>
 
-## 6. 质量门槛与验证命令
+## 7. 质量门槛与验证命令
 
 基础门槛：
 
@@ -224,7 +271,7 @@ bun run build:frontend
 
 <a id="full-review"></a>
 
-## 7. PR 与评审关注点
+## 8. PR 与评审关注点
 
 评审优先级：
 

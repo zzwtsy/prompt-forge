@@ -55,6 +55,11 @@
       "source": "antfu/skills",
       "sourceType": "github",
       "computedHash": "669c7275f7e1379b06b2bcfa593603aead4c983b951c7e8edbc09640aa38d0a1"
+    },
+    "zustand": {
+      "source": "bobmatnyc/claude-mpm-skills",
+      "sourceType": "github",
+      "computedHash": "b87f714ffab159f1758a07cef69806b016360ba74783684155ed83d614f162af"
     }
   }
 }

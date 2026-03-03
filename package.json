@@ -76,7 +76,7 @@
       "globals": "^17.3.0",
       "hono": "^4.11.9",
       "hono-pino": "^0.10.1",
-      "lucide-react": "^0.575.0",
+      "lucide-react": "^0.576.0",
       "pino": "^10.3.1",
       "pino-pretty": "^13.1.1",
       "pino-roll": "^4.0.0",
@@ -91,7 +91,8 @@
       "typescript": "~5.9.3",
       "vite": "^7.2.4",
       "vitest": "^4.0.18",
-      "zod": "^4.3.6"
+      "zod": "^4.3.6",
+      "zustand": "5.0.11"
     }
   }
 }

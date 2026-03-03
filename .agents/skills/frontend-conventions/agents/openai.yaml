@@ -1,4 +1,4 @@
 interface:
   display_name: "Frontend Conventions"
-  short_description: "Frontend engineering conventions for TanStack Router, Alova, and ApiEnvelope"
+  short_description: "Conventions for TanStack Router, Alova, and ApiEnvelope"
   default_prompt: "Use $frontend-conventions to implement or review apps/frontend routing, Alova service layering, ApiEnvelope handling, state persistence, and frontend quality checks."

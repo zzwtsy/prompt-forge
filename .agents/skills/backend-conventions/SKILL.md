@@ -7,14 +7,16 @@ description: 后端开发规范技能。用于 `apps/backend` 相关任务，包
 
 ## Workflow
 
-1. 先阅读 `references/backend-conventions.full.md`，确认当前约束与优先级。
-2. 当任务涉及新增模块或改造接口时，优先套用 `references/templates.md` 中的骨架与片段。
-3. 完成改动前，按 `references/checklists.md` 执行自检，逐条确认目录结构、OpenAPI、事务、错误码、注释与测试。
+1. 先按任务类型选择阅读入口，不默认通读全文。
+2. 路由与 OpenAPI 任务：阅读 `references/backend-conventions.full.md` 的路由与 OpenAPI 章节，并优先套用 `references/templates.md` 的路由模块骨架与 OpenAPI 片段模板。
+3. 事务与写操作任务：阅读 `references/backend-conventions.full.md` 的事务与拆分策略章节，并优先套用 `references/templates.md` 的事务模板。
+4. 错误码与错误响应任务：阅读 `references/backend-conventions.full.md` 的错误码章节，套用 `references/templates.md` 的错误码与 `AppError` 模板，并按 `references/checklists.md` 的错误码检查项自检。
+5. 提交前与评审任务：按 `references/checklists.md` 执行开发中、提交前与验收清单。
 
 ## References
 
 - `references/backend-conventions.full.md`
-  规范正文镜像。用于完整阅读、引用和对照。
+  规范正文镜像。用于完整对照、按需查阅和引用。
 - `references/templates.md`
   路由模块骨架、OpenAPI 片段、事务模板、错误码与 `AppError` 模板。
 - `references/checklists.md`

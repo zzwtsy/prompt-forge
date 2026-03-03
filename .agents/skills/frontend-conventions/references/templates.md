@@ -1,17 +1,18 @@
-# Frontend 模板库
+# Frontend 模板库（Page 主轴）
 
 > 适用范围：`apps/frontend/src`
 
 ## 目录
 
 - [1. 根路由重定向模板（`/ -> /optimize`）](#tpl-root-redirect)
-- [2. pathless 父路由 + 子路由模板](#tpl-pathless-layout)
-- [3. useRequest 首屏加载模板](#tpl-use-request-load)
-- [4. useRequest 手动提交模板](#tpl-use-request-submit)
-- [5. usePagination 列表模板](#tpl-use-pagination)
-- [6. useWatcher 条件查询模板](#tpl-use-watcher)
-- [7. 薄 service 模板（方法工厂）](#tpl-thin-service)
-- [8. request error mapper 模板](#tpl-error-mapper)
+- [2. 薄壳路由装配模板（Route -> Page）](#tpl-thin-route)
+- [3. page 模块脚手架模板](#tpl-page-module)
+- [4. useRequest 首屏加载模板](#tpl-use-request-load)
+- [5. useRequest 手动提交模板](#tpl-use-request-submit)
+- [6. usePagination 列表模板](#tpl-use-pagination)
+- [7. useWatcher 条件查询模板](#tpl-use-watcher)
+- [8. 薄 service 模板（方法工厂）](#tpl-thin-service)
+- [9. request error mapper 模板](#tpl-error-mapper)
 
 <a id="tpl-root-redirect"></a>
 
@@ -28,58 +29,91 @@ export const Route = createFileRoute("/")({
 });
 ```
 
-<a id="tpl-pathless-layout"></a>
+<a id="tpl-thin-route"></a>
 
-## 2. pathless 父路由 + 子路由模板
+## 2. 薄壳路由装配模板（Route -> Page）
 
 ```tsx
-// routes/_workbench.tsx
-import { Link, createFileRoute } from "@tanstack/react-router";
+// routes/optimize.tsx
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { OptimizePage } from "@/page/optimize";
 
-export const Route = createFileRoute("/_workbench")({
-  component: WorkbenchLayout,
+export const Route = createFileRoute("/optimize")({
+  beforeLoad: ({ context, location }) => {
+    if (!context.auth.isAuthenticated) {
+      throw redirect({
+        to: "/login",
+        search: { redirect: location.href },
+      });
+    }
+  },
+  component: OptimizePage,
 });
+```
 
-function WorkbenchLayout() {
+```tsx
+// routes/models.tsx
+import { createFileRoute } from "@tanstack/react-router";
+import { ModelsPage } from "@/page/models";
+
+export const Route = createFileRoute("/models")({
+  component: ModelsPage,
+});
+```
+
+<a id="tpl-page-module"></a>
+
+## 3. page 模块脚手架模板
+
+```text
+src/
+  page/
+    optimize/
+      optimize.page.tsx
+      components/
+        optimize-form.tsx
+      hooks/
+        use-optimize-state.ts
+      services/
+        optimize.service.ts
+      types.ts
+      constants.ts
+      optimize.util.ts
+      index.ts
+```
+
+```tsx
+// page/optimize/index.ts
+export { OptimizePage } from "./optimize.page";
+```
+
+```tsx
+// page/optimize/optimize.page.tsx
+import { OptimizeForm } from "./components/optimize-form";
+
+export function OptimizePage() {
   return (
     <main>
-      <nav>
-        <Link to="/optimize">优化</Link>
-        <Link to="/models">模型</Link>
-        <Link to="/history">历史</Link>
-      </nav>
-      {/* 三个面板保持 mounted，仅通过显隐切换 */}
+      <OptimizeForm />
     </main>
   );
 }
 ```
 
-```tsx
-// routes/_workbench.optimize.tsx
-import { createFileRoute } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/_workbench/optimize")({
-  component: () => null,
-});
-```
-
 <a id="tpl-use-request-load"></a>
 
-## 3. useRequest 首屏加载模板
+## 4. useRequest 首屏加载模板
 
 ```tsx
+// page/optimize/components/model-list.tsx
 import { useRequest } from "alova/client";
 import Apis from "@/api";
 
-export function DomainList() {
-  const {
-    data,
-    loading,
-    error,
-    send: refresh,
-  } = useRequest(Apis.Domain.get_api_domain(), {
-    immediate: true,
-  });
+export function ModelList() {
+  const { data, loading, error, send: refresh } = useRequest(
+    Apis.ModelSettings.get_api_providers(),
+    { immediate: true },
+  );
 
   if (loading) {
     return <div>加载中...</div>;
@@ -95,24 +129,25 @@ export function DomainList() {
 
 <a id="tpl-use-request-submit"></a>
 
-## 4. useRequest 手动提交模板
+## 5. useRequest 手动提交模板
 
 ```tsx
+// page/optimize/components/optimize-submit-button.tsx
 import { useRequest } from "alova/client";
 import Apis from "@/api";
 
-export function SaveButton() {
+export function OptimizeSubmitButton() {
   const { loading, send } = useRequest(
-    (payload: { name: string }) => Apis.Domain.post_api_domain({ data: payload }),
+    (payload: { prompt: string }) => Apis.PromptRuntime.post_api_prompt_optimize({ data: payload }),
     { immediate: false },
   );
 
-  const handleClick = async () => {
-    await send({ name: "demo" });
+  const handleSubmit = async () => {
+    await send({ prompt: "请优化这段提示词" });
   };
 
   return (
-    <button type="button" disabled={loading} onClick={() => void handleClick()}>
+    <button type="button" disabled={loading} onClick={() => void handleSubmit()}>
       {loading ? "提交中..." : "提交"}
     </button>
   );
@@ -121,44 +156,36 @@ export function SaveButton() {
 
 <a id="tpl-use-pagination"></a>
 
-## 5. usePagination 列表模板
+## 6. usePagination 列表模板
 
 ```tsx
+// page/history/components/history-list.tsx
 import { usePagination } from "alova/client";
 import Apis from "@/api";
 
-interface Item {
+interface HistoryItem {
   id: string;
-  title: string;
+  optimizedPrompt: string;
 }
 
 export function HistoryList() {
-  const {
-    data,
-    loading,
-    page,
-    pageSize,
-    total,
-    isLastPage,
-    next,
-  } = usePagination(
+  const { data, loading, isLastPage, next } = usePagination(
     (page, pageSize) => Apis.SavedPrompts.get_api_saved_prompts({
       params: { page, pageSize },
     }),
     {
       initialPage: 1,
       initialPageSize: 20,
+      data: response => response.items as HistoryItem[],
       total: response => response.total,
-      data: response => response.items as Item[],
     },
   );
 
   return (
     <div>
-      <p>{`第 ${page} 页 / 共 ${total} 条 / 每页 ${pageSize} 条`}</p>
       {loading && <p>加载中...</p>}
       <ul>
-        {(data ?? []).map(item => <li key={item.id}>{item.title}</li>)}
+        {(data ?? []).map(item => <li key={item.id}>{item.optimizedPrompt}</li>)}
       </ul>
       <button type="button" disabled={isLastPage} onClick={next}>加载更多</button>
     </div>
@@ -168,23 +195,22 @@ export function HistoryList() {
 
 <a id="tpl-use-watcher"></a>
 
-## 6. useWatcher 条件查询模板
+## 7. useWatcher 条件查询模板
 
 ```tsx
+// page/models/components/model-search.tsx
 import { useMemo, useState } from "react";
 import { useWatcher } from "alova/client";
 import Apis from "@/api";
 
-export function SearchPanel() {
+export function ModelSearch() {
   const [keyword, setKeyword] = useState("");
-  const [providerId, setProviderId] = useState<string | undefined>(undefined);
-  const watched = useMemo(() => [keyword, providerId], [keyword, providerId]);
+  const watched = useMemo(() => [keyword], [keyword]);
 
   const { data, loading } = useWatcher(
-    () => Apis.Domain.get_api_domain({
+    () => Apis.ModelSettings.get_api_providers({
       params: {
         keyword: keyword.trim(),
-        providerId,
       },
     }),
     watched,
@@ -205,32 +231,32 @@ export function SearchPanel() {
 
 <a id="tpl-thin-service"></a>
 
-## 7. 薄 service 模板（方法工厂）
+## 8. 薄 service 模板（方法工厂）
 
 ```ts
+// page/models/services/models.service.ts
 import Apis from "@/api";
 
-export interface ListParams {
+export interface QueryProvidersParams {
   keyword?: string;
-  page: number;
-  pageSize: number;
+  page?: number;
+  pageSize?: number;
 }
 
 // 薄 service: 仅做参数归一化与方法聚合，不做机械转发。
-export const domainMethods = {
-  list(params: ListParams) {
+export const modelMethods = {
+  queryProviders(params: QueryProvidersParams) {
     const keyword = params.keyword?.trim();
-    return Apis.Domain.get_api_domain({
+    return Apis.ModelSettings.get_api_providers({
       params: {
         ...params,
         keyword: keyword?.length ? keyword : undefined,
       },
     });
   },
-  save(payload: { id: string; name: string }) {
-    return Apis.Domain.put_api_domain_id({
-      pathParams: { id: payload.id },
-      data: { name: payload.name.trim() },
+  saveDefaults(payload: { evaluateModelId: string | null; optimizeModelId: string | null }) {
+    return Apis.ModelSettings.put_api_model_defaults({
+      data: payload,
     });
   },
 };
@@ -238,9 +264,10 @@ export const domainMethods = {
 
 <a id="tpl-error-mapper"></a>
 
-## 8. request error mapper 模板
+## 9. request error mapper 模板
 
 ```ts
+// page/shared/hooks/use-request-error.ts
 import { useCallback } from "react";
 import { extractValidationFieldPaths, normalizeClientError } from "@/lib/api-envelope";
 

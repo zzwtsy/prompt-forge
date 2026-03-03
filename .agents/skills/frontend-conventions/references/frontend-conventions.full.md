@@ -1,6 +1,6 @@
 # Frontend 开发规范
 
-- 版本：`v1.1`
+- 版本：`v1.2`
 - 同步日期：`2026-03-03`
 - 对齐基线：`apps/frontend` 当前技术栈（React 19 + TanStack Router + Alova + Tailwind v4 + shadcn/ui）
 
@@ -34,6 +34,19 @@
 - 多 tab 工作台优先采用 pathless 父路由承载共享状态，子路由仅表达 URL。
 - 页面内导航优先使用 `Link`，仅在副作用跳转时使用 `useNavigate`。
 - 搜索参数属于用户输入，必须在 `validateSearch` 校验（仅当该页面确实使用 search 参数时）。
+- `routes/*` 统一采用“薄壳路由”：只负责路由契约、守卫、页面装配，不承载业务实现细节。
+
+薄壳路由允许项：
+
+- `createFileRoute` 路由定义。
+- `beforeLoad`、`loader`、`validateSearch`、`redirect` 等路由契约能力。
+- 通过 import 引用 `@/page/{module}` 的页面入口组件并完成装配。
+
+薄壳路由禁止项：
+
+- route 文件内实现业务表单、列表等 JSX 细节。
+- route 文件内直接调用 `Apis.*`。
+- route 文件内堆叠领域状态机、复杂业务编排逻辑。
 
 推荐路径形态：
 
@@ -54,19 +67,26 @@
 
 ```text
 src/
-  routes/                    # 路由壳与装配
-  features/{domain}/
-    components/              # 纯展示+交互组件
-    hooks/                   # 领域级 hooks（状态编排/错误映射）
-    services/                # 请求封装（调用 Apis）
-    types.ts                 # 领域类型
-    constants.ts             # 领域常量
-    utils.ts                 # 纯函数
+  components/                # 全局共享组件（含 ui 基础组件）
+  hooks/                     # 全局共享 hooks
+  lib/                       # 全局共享工具函数
+  page/{module}/
+    {module}.page.tsx        # 模块页面入口（页面编排）
+    components/              # 模块私有组件
+    hooks/                   # 模块私有 hooks
+    services/                # 模块请求层（薄 service）
+    types.ts                 # 模块类型
+    constants.ts             # 模块常量
+    {module}.util.ts         # 工具较少时单文件
+    utils/                   # 工具较多时目录化拆分
+    index.ts                 # 模块公共导出
+  routes/                    # 文件路由（薄壳）
 ```
 
 分层职责：
 
-- Route 层：只负责路由定义、页面装配、顶层共享状态。
+- Route 层：只负责路由契约、守卫和页面装配。
+- Page 层：模块入口与页面编排，组合私有组件、hooks 与 service。
 - Component 层：只处理视图、用户交互、局部状态。
 - Hook 层：封装跨组件复用的状态机、错误分发、派生逻辑。
 - Service 层：仅在满足“薄封装”条件时存在（参数归一化、多端点编排、跨页面复用、领域语义封装）。
@@ -74,8 +94,14 @@ src/
 
 禁止项：
 
-- 在单个 route 文件中同时堆叠路由、API 调用、领域类型、通用工具函数。
+- 在单个 route 文件中同时堆叠路由、API 调用、领域类型和通用工具函数。
 - 在 JSX 事件处理器里直接写 `Apis.*.send()`（应通过 alova hooks 触发请求）。
+
+### 2.1 存量过渡策略
+
+- 禁止新增 `src/features/**`。
+- 允许对遗留 `src/features/**` 做 bugfix 和小范围维护。
+- 新增需求与重构后的模块统一落到 `src/page/**`。
 
 <a id="full-api"></a>
 
@@ -87,6 +113,7 @@ src/
 - 仅 `apps/frontend/src/api/index.ts` 可维护；`src/api` 其余文件为生成产物，禁止手改。
 - `ApiEnvelope` 统一在 alova 全局 `responded` 中解包，并在失败时抛出 `ApiEnvelopeError`。
 - 组件/页面层禁止处理 envelope 的 `success` 分支与 `error` 分支。
+- 模块请求封装统一放在 `page/{module}/services`，并遵守“薄 service”边界。
 
 ### 3.1 Hook 优先级矩阵（React）
 
@@ -212,3 +239,4 @@ bun run build:frontend
 - 单文件超过千行且同时包含多域状态和多类 API 调用。
 - 相同错误码逻辑在多个组件重复实现。
 - 通过 query 和 path 双轨维护同一 UI 状态。
+- 新增功能未进入 `src/page/**`，而是继续扩展 `src/features/**`。

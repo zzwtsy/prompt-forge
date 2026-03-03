@@ -1,7 +1,7 @@
 # Frontend 开发规范
 
-- 版本：`v1.0`
-- 同步日期：`2026-03-02`
+- 版本：`v1.1`
+- 同步日期：`2026-03-03`
 - 对齐基线：`apps/frontend` 当前技术栈（React 19 + TanStack Router + Alova + Tailwind v4 + shadcn/ui）
 
 ## 目录
@@ -69,13 +69,13 @@ src/
 - Route 层：只负责路由定义、页面装配、顶层共享状态。
 - Component 层：只处理视图、用户交互、局部状态。
 - Hook 层：封装跨组件复用的状态机、错误分发、派生逻辑。
-- Service 层：唯一允许出现 `Apis.*` 的位置。
+- Service 层：仅在满足“薄封装”条件时存在（参数归一化、多端点编排、跨页面复用、领域语义封装）。
 - Utils 层：保持纯函数，不依赖 React 生命周期。
 
 禁止项：
 
 - 在单个 route 文件中同时堆叠路由、API 调用、领域类型、通用工具函数。
-- 在 JSX 事件处理器里直接写 `Apis.*.send()`。
+- 在 JSX 事件处理器里直接写 `Apis.*.send()`（应通过 alova hooks 触发请求）。
 
 <a id="full-api"></a>
 
@@ -83,10 +83,49 @@ src/
 
 统一约束：
 
-- API 类型来源于 `apps/frontend/src/api/*` 生成文件；业务代码只消费 `index.ts` 导出的 `Apis`。
-- 统一在 service 层调用 `Apis`，并通过 `unwrapApiEnvelope` 解包。
-- 组件层禁止直接处理 envelope 成功/失败分支。
-- 错误处理统一通过共享 mapper/hook（例如 `useRequestError`）完成，避免散落判定。
+- API 类型来源于 `apps/frontend/src/api/*` 生成文件；业务代码统一从 `@/api` 消费 `Apis`。
+- 仅 `apps/frontend/src/api/index.ts` 可维护；`src/api` 其余文件为生成产物，禁止手改。
+- `ApiEnvelope` 统一在 alova 全局 `responded` 中解包，并在失败时抛出 `ApiEnvelopeError`。
+- 组件/页面层禁止处理 envelope 的 `success` 分支与 `error` 分支。
+
+### 3.1 Hook 优先级矩阵（React）
+
+- 首屏加载、手动重试、按钮触发请求：`useRequest`。
+- 依赖条件变化自动重拉：`useWatcher`（首次拉取需显式 `immediate: true`）。
+- 列表分页/加载更多：`usePagination`。
+- 表单提交与提交流程状态：`useForm` 或 `useRequest({ immediate: false })`。
+- 跨组件静默刷新：`useFetcher`。
+
+工程要求：
+
+- 组件内优先使用 alova hooks 管理 `loading/data/error`，非必要不手写三件套状态。
+- 非 React 组件上下文（例如工具脚本、单次副作用流程）才允许直接 `await method` 或 `method.send()`。
+
+### 3.2 薄 Service 边界（MUST）
+
+满足以下任一条件才允许新增 service：
+
+- 该请求逻辑会在 2 个及以上组件复用。
+- 需要参数归一化、响应结构转换、方法工厂聚合。
+- 需要跨端点编排（串并行请求、先决请求）。
+- 需要沉淀领域语义（例如统一业务动作入口）。
+
+禁止项：
+
+- 将单个接口机械包装成“仅转发”的样板 service。
+- 在 service 中重复实现与页面无关的通用错误提示逻辑。
+
+### 3.3 缓存与一致性（保持 alova 默认缓存）
+
+- 默认保持 alova 缓存行为，不做全局禁用。
+- 写操作后必须定义一致性策略：优先 `hitSource` 自动失效，其次手动失效/重拉。
+- 强一致场景必须显式绕过缓存或强制重取，不能依赖默认命中。
+- 跨组件请求状态同步优先使用 alova 提供的缓存/动作机制，避免引入额外全局状态重复管理。
+
+### 3.4 错误处理链路
+
+- `responded` 抛出的业务错误统一进入 `normalizeClientError`。
+- 业务错误码映射统一放在共享 mapper/hook（如 `useRequestError`），禁止在页面散落重复判定。
 
 错误处理约定：
 
@@ -95,6 +134,13 @@ src/
 - `22005`：服务商 key 未配置，提供跳转模型设置动作。
 - `32101`：保存草稿失效提示。
 - `30001`：参数校验失败提示，并透传字段高亮回调。
+
+常见坑：
+
+- `useWatcher` 首参数必须是返回 Method 的函数，不能直接传 Method 实例。
+- `useWatcher` 默认不会首次请求，需显式设置 `immediate: true`。
+- alova v3 的缓存操作按异步处理，调用方需等待完成后再依赖结果。
+- `updateState` 仅在拥有该状态的组件仍处于 mounted 时生效。
 
 <a id="full-state"></a>
 

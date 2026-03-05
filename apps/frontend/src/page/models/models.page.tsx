@@ -1,9 +1,9 @@
 import type { ModelDefaultsData, ProviderItem } from "@/lib/workbench-api";
 import { useRequest } from "alova/client";
 import { useCallback } from "react";
-import { useWorkbenchShellStore } from "@/lib/store";
 import { modelSettingsMethods } from "@/lib/workbench-api";
 import { useWorkbenchErrorHandler } from "@/lib/workbench-shell";
+import { useWorkbenchShellStore } from "@/store";
 import { ModelSettingsTab } from "./components/model-settings-tab";
 
 function unwrapResponseData<T>(response: T | { data: T }): T {

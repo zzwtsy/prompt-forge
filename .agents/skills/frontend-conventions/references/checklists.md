@@ -6,6 +6,7 @@
 - [ ] 已确认是否涉及路由契约变更（path/search）。
 - [ ] 已确认是否触及生成产物边界（`routeTree.gen.ts`、`src/api/*`）。
 - [ ] 已确认模块落点与命名符合 `page/{module}` 主轴目录约定。
+- [ ] 若涉及跨页面共享状态，已确认状态目录落位 `src/store/**`。
 - [ ] 已确认本次请求场景对应的 alova hook 策略（`useRequest/useWatcher/usePagination/useForm/useFetcher`）。
 - [ ] 已判断当前状态是否真的需要 Context（非高频、非纯页面私有状态）。
 
@@ -26,6 +27,7 @@
 - [ ] 仅在满足“薄 service”条件时新增 `services/*`，无机械转发型封装。
 - [ ] 纯函数已抽离到 `utils.ts`，不依赖 React 生命周期。
 - [ ] 跨组件复用逻辑已沉淀到 hooks。
+- [ ] 本次改动无新增 `src/lib/store/**`，store 导入统一走 `@/store`。
 - [ ] Context 已按 `context/provider/use-hook` 分文件组织。
 - [ ] 组件层通过 `useXxx` 消费 Context，不直接读写 Context 对象。
 - [ ] Provider 的 `value` 已用 `useMemo` 稳定化，回调已用 `useCallback` 稳定化。
@@ -52,6 +54,7 @@
 - [ ] 已执行 `bunx tsc -p apps/frontend/tsconfig.app.json --noEmit`。
 - [ ] 已执行 `bun run lint`。
 - [ ] 已执行 `bun run build:frontend`。
+- [ ] 已检索并确认无 `@/lib/store` 残留引用。
 - [ ] 路由可达性已手工验证（`/`、`/optimize`、`/models`、`/history`）。
 - [ ] 功能回归已验证（错误码提示、保存重试、历史刷新）。
 - [ ] 已确认未手改 `src/api` 生成文件（仅 `src/api/index.ts` 可维护）。

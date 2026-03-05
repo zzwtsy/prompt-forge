@@ -1,6 +1,5 @@
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { WorkbenchNoticeBanner } from "@/components/workbench-notice-banner";
-import { useWorkbenchShellStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import {
   getWorkbenchTabFromPathname,
@@ -8,6 +7,7 @@ import {
   WORKBENCH_TAB_PATHS,
   WORKBENCH_TABS,
 } from "@/lib/workbench-shell";
+import { useWorkbenchShellStore } from "@/store";
 import { useWorkbenchBootstrap } from "./hooks/use-workbench-bootstrap";
 
 export function WorkbenchLayoutPage() {

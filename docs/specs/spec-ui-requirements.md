@@ -1,7 +1,7 @@
 # UI 需求文档（Prompt Forge）
 
-- 版本：`v1.1`
-- 日期：`2026-03-02`
+- 版本：`v1.2`
+- 日期：`2026-03-05`
 - 适用范围：`apps/frontend` 前端页面与交互实现；涉及的后端接口联动约束
 
 ## 1. 来源对齐说明
@@ -38,6 +38,11 @@
   - `apps/frontend/src/routeTree.gen.ts`
   - `apps/frontend/src/api/*`（除 `index.ts` 外）
 - 后端 OpenAPI 契约变化后，统一执行 `bun run gen:api` 刷新前端 API 类型。
+
+### 3.4 工程目录约束
+
+- 跨页面共享会话状态统一放在 `apps/frontend/src/store`。
+- `apps/frontend/src/lib` 用于工具与跨模块复用能力，不作为 store 容器。
 
 ## 4. TanStack Router 约束下的信息架构
 
@@ -230,6 +235,7 @@
 
 - 切换 tabs 不清空当前会话内输入与结果状态。
 - 当前 tab 通过 URL 路径持久化。
+- 跨页面共享会话状态统一由 `apps/frontend/src/store` 承载，避免与 `src/lib` 职责混用。
 
 ## 10. API 映射与接口约束
 

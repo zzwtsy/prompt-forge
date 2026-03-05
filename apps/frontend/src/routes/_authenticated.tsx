@@ -4,11 +4,11 @@ import {
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { AuthLoadingScreen } from "@/components/auth-loading-screen";
+import { WorkbenchLayoutPage } from "@/page/workbench-layout";
 import {
   resetOptimizeSessionStore,
   resetWorkbenchShellStore,
-} from "@/lib/store";
-import { WorkbenchLayoutPage } from "@/page/workbench-layout";
+} from "@/store";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) => {

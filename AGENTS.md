@@ -4,7 +4,7 @@
 
 This repository is a Bun workspace monorepo:
 
-- `apps/frontend`: React 19 + Vite UI (`src/routes`, `src/components`, `src/lib`).
+- `apps/frontend`: React 19 + Vite UI (`src/routes`, `src/page`, `src/components`, `src/store`, `src/lib`).
 - `apps/backend`: Hono API, Better Auth, Drizzle ORM (`src/lib`, `src/middlewares`, `src/db`).
 - `docs`: product requirements and prompt-related docs.
 - Root config: `eslint.config.mjs`, `bunfig.toml`, workspace `package.json`.

@@ -1,5 +1,5 @@
-import { useWorkbenchShellStore } from "@/lib/store";
 import { useWorkbenchErrorHandler } from "@/lib/workbench-shell";
+import { useWorkbenchShellStore } from "@/store";
 import { OptimizeTab } from "./components/optimize-tab";
 
 export function OptimizePage() {

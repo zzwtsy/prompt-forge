@@ -1,4 +1,3 @@
-import type { OptimizeFieldErrors } from "@/lib/store";
 import type {
   EvaluateResponseData,
   OptimizeResponseData,
@@ -9,6 +8,7 @@ import type {
   NoticeInput,
   RequestErrorOptions,
 } from "@/lib/workbench-shell";
+import type { OptimizeFieldErrors } from "@/store";
 import { useRequest } from "alova/client";
 import { Copy, Loader2, Save, WandSparkles } from "lucide-react";
 import { useMemo } from "react";
@@ -32,12 +32,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useOptimizeSessionStore } from "@/lib/store";
 import {
   promptRuntimeMethods,
   savedPromptsMethods,
 } from "@/lib/workbench-api";
 import { MODEL_DEFAULT_OPTION } from "@/lib/workbench-shell";
+import { useOptimizeSessionStore } from "@/store";
 import {
   getEnabledModelOptions,
   hasField,

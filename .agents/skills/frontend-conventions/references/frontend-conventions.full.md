@@ -1,7 +1,7 @@
 # Frontend 开发规范
 
-- 版本：`v1.3`
-- 同步日期：`2026-03-03`
+- 版本：`v1.4`
+- 同步日期：`2026-03-05`
 - 对齐基线：`apps/frontend` 当前技术栈（React 19 + TanStack Router + Alova + Tailwind v4 + shadcn/ui）
 
 ## 目录
@@ -70,6 +70,7 @@
 src/
   components/                # 全局共享组件（含 ui 基础组件）
   hooks/                     # 全局共享 hooks
+  store/                     # 全局共享 Zustand store（统一入口）
   lib/                       # 全局共享工具函数
   page/{module}/
     {module}.page.tsx        # 模块页面入口（页面编排）
@@ -177,6 +178,10 @@ src/
 统一约束：
 
 - 同一工作台跨 tab 共享状态放在 pathless 父路由。
+- 全局共享 Zustand store 统一放在 `src/store/**`。
+- store 消费统一使用 `@/store` 入口。
+- 禁止新增 `src/lib/store/**`。
+- `src/lib/**` 保持工具函数与跨域能力定位，不再承载 store 容器。
 - tab 组件默认保持 mounted，通过显隐切换而非条件卸载，确保会话内输入不丢失。
 - URL 负责“当前页面位置”，业务草稿状态由内存态管理。
 - 请求 loading 状态与业务内容状态分离，避免隐式耦合。

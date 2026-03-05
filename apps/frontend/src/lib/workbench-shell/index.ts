@@ -6,8 +6,6 @@ export {
   WORKBENCH_TABS,
 } from "./constants";
 export type {
-  GlobalNotice,
-  NoticeInput,
   RequestErrorOptions,
   WorkbenchTab,
 } from "./types";
@@ -17,3 +15,7 @@ export {
   getWorkbenchTabFromPathname,
   tabLabel,
 } from "./utils";
+export {
+  useWorkbenchToast,
+  workbenchToast,
+} from "./workbench-toast";

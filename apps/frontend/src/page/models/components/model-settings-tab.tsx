@@ -4,7 +4,6 @@ import type {
   ProviderItem,
 } from "@/lib/workbench-api";
 import type {
-  NoticeInput,
   RequestErrorOptions,
 } from "@/lib/workbench-shell";
 import { useRequest } from "alova/client";
@@ -40,7 +39,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { modelSettingsMethods } from "@/lib/workbench-api";
-import { MODEL_NONE_OPTION } from "@/lib/workbench-shell";
+import { MODEL_NONE_OPTION, useWorkbenchToast } from "@/lib/workbench-shell";
 import {
   getEnabledModelOptions,
   hasField,
@@ -53,7 +52,6 @@ interface ModelSettingsTabProps {
   settingsLoading: boolean;
   refreshSettings: (silent?: boolean) => Promise<boolean>;
   onRequestError: (error: unknown, options: RequestErrorOptions) => void;
-  onShowNotice: (notice: NoticeInput) => void;
 }
 
 interface ModelSettingsValidationErrors {
@@ -89,8 +87,8 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
     settingsLoading,
     refreshSettings,
     onRequestError,
-    onShowNotice,
   } = props;
+  const notice = useWorkbenchToast();
 
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
   const [defaultsDraft, setDefaultsDraft] = useState<{
@@ -298,8 +296,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
       setDefaultsDraft(null);
       await refreshSettings(true);
 
-      onShowNotice({
-        tone: "success",
+      notice.success({
         title: "默认模型已更新",
         message: "评估与优化默认模型保存成功。",
       });
@@ -331,8 +328,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
     }));
 
     if (Object.keys(nextErrors).length > 0) {
-      onShowNotice({
-        tone: "warning",
+      notice.warning({
         title: "服务商参数不合法",
         message: "请先修正服务商名称或 BaseURL。",
       });
@@ -369,8 +365,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
         clearApiKey: false,
       }));
 
-      onShowNotice({
-        tone: "success",
+      notice.success({
         title: "服务商已更新",
         message: "服务商配置与启用状态已保存。",
       });
@@ -400,8 +395,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
       await sendSyncProviderModels(selectedProvider.id);
       await refreshSettings(true);
 
-      onShowNotice({
-        tone: "success",
+      notice.success({
         title: "模型同步完成",
         message: "服务商模型列表已刷新。",
       });
@@ -424,8 +418,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
       });
       await refreshSettings(true);
 
-      onShowNotice({
-        tone: "success",
+      notice.success({
         title: "模型状态已更新",
         message: `${model.modelName} 已${model.enabled ? "禁用" : "启用"}。`,
       });
@@ -456,8 +449,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
       });
       await refreshSettings(true);
 
-      onShowNotice({
-        tone: "success",
+      notice.success({
         title: "模型显示名已更新",
         message: `${model.modelName} 的显示名已保存。`,
       });
@@ -491,8 +483,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
     }));
 
     if (Object.keys(nextErrors).length > 0) {
-      onShowNotice({
-        tone: "warning",
+      notice.warning({
         title: "新增服务商参数不合法",
         message: "请检查服务商名称与 BaseURL。",
       });
@@ -513,8 +504,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
 
       await refreshSettings(true);
 
-      onShowNotice({
-        tone: "success",
+      notice.success({
         title: "服务商创建成功",
         message: "新服务商已加入列表。",
       });
@@ -552,8 +542,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
     }));
 
     if (Object.keys(nextErrors).length > 0) {
-      onShowNotice({
-        tone: "warning",
+      notice.warning({
         title: "模型名称不能为空",
         message: "请填写模型名称后再提交。",
       });
@@ -573,8 +562,7 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
 
       await refreshSettings(true);
 
-      onShowNotice({
-        tone: "success",
+      notice.success({
         title: "模型创建成功",
         message: "已添加到当前服务商模型列表。",
       });

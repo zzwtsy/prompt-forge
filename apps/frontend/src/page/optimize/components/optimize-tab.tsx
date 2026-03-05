@@ -5,7 +5,6 @@ import type {
   SignedSaveDraft,
 } from "@/lib/workbench-api";
 import type {
-  NoticeInput,
   RequestErrorOptions,
 } from "@/lib/workbench-shell";
 import type { OptimizeFieldErrors } from "@/store";
@@ -36,7 +35,7 @@ import {
   promptRuntimeMethods,
   savedPromptsMethods,
 } from "@/lib/workbench-api";
-import { MODEL_DEFAULT_OPTION } from "@/lib/workbench-shell";
+import { MODEL_DEFAULT_OPTION, useWorkbenchToast } from "@/lib/workbench-shell";
 import { useOptimizeSessionStore } from "@/store";
 import {
   getEnabledModelOptions,
@@ -50,7 +49,6 @@ interface OptimizeTabProps {
   providers: ProviderItem[];
   settingsLoading: boolean;
   onRequestError: (error: unknown, options: RequestErrorOptions) => void;
-  onShowNotice: (notice: NoticeInput) => void;
   onPersistedHistory: () => void;
 }
 
@@ -65,9 +63,9 @@ export function OptimizeTab(props: OptimizeTabProps) {
     providers,
     settingsLoading,
     onRequestError,
-    onShowNotice,
     onPersistedHistory,
   } = props;
+  const notice = useWorkbenchToast();
 
   const prompt = useOptimizeSessionStore(state => state.prompt);
   const setPrompt = useOptimizeSessionStore(state => state.setPrompt);
@@ -175,8 +173,7 @@ export function OptimizeTab(props: OptimizeTabProps) {
     }));
 
     if (Object.keys(nextErrors).length > 0) {
-      onShowNotice({
-        tone: "warning",
+      notice.warning({
         title: "参数不合法",
         message: "请先修正评估参数后再提交。",
       });
@@ -219,8 +216,7 @@ export function OptimizeTab(props: OptimizeTabProps) {
         maxTokens: payload.maxTokens,
       });
 
-      onShowNotice({
-        tone: "success",
+      notice.success({
         title: "评估完成",
         message: "评估结果已更新，可以继续执行优化。",
       });
@@ -270,8 +266,7 @@ export function OptimizeTab(props: OptimizeTabProps) {
     }));
 
     if (Object.keys(nextErrors).length > 0) {
-      onShowNotice({
-        tone: "warning",
+      notice.warning({
         title: "参数不合法",
         message: "请先修正优化参数后再提交。",
       });
@@ -322,15 +317,13 @@ export function OptimizeTab(props: OptimizeTabProps) {
       if (data.persistence.saved) {
         setSaveDraft(null);
         onPersistedHistory();
-        onShowNotice({
-          tone: "success",
+        notice.success({
           title: "优化完成",
           message: "优化结果已保存到历史记录。",
         });
       } else if (data.persistence.retryable && data.persistence.saveDraft) {
         setSaveDraft(data.persistence.saveDraft);
-        onShowNotice({
-          tone: "warning",
+        notice.warning({
           title: "优化完成，保存待重试",
           message: "请点击“保存”完成历史记录补保存。",
         });
@@ -367,8 +360,7 @@ export function OptimizeTab(props: OptimizeTabProps) {
 
       setSaveDraft(null);
       onPersistedHistory();
-      onShowNotice({
-        tone: "success",
+      notice.success({
         title: "保存成功",
         message: "优化结果已补保存到历史记录。",
       });
@@ -382,8 +374,7 @@ export function OptimizeTab(props: OptimizeTabProps) {
   const copyText = async (text: string, successTitle: string) => {
     try {
       await writeClipboardText(text);
-      onShowNotice({
-        tone: "success",
+      notice.success({
         title: successTitle,
         message: "内容已复制到剪贴板。",
       });

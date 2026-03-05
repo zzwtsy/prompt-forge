@@ -1,5 +1,4 @@
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
-import { WorkbenchNoticeBanner } from "@/components/workbench-notice-banner";
 import { cn } from "@/lib/utils";
 import {
   getWorkbenchTabFromPathname,
@@ -7,13 +6,10 @@ import {
   WORKBENCH_TAB_PATHS,
   WORKBENCH_TABS,
 } from "@/lib/workbench-shell";
-import { useWorkbenchShellStore } from "@/store";
 import { useWorkbenchBootstrap } from "./hooks/use-workbench-bootstrap";
 
 export function WorkbenchLayoutPage() {
   const location = useLocation();
-  const notice = useWorkbenchShellStore(state => state.notice);
-  const clearNotice = useWorkbenchShellStore(state => state.clearNotice);
 
   useWorkbenchBootstrap();
 
@@ -54,13 +50,6 @@ export function WorkbenchLayoutPage() {
             })}
           </div>
         </div>
-
-        {notice && (
-          <WorkbenchNoticeBanner
-            notice={notice}
-            onClose={clearNotice}
-          />
-        )}
 
         <Outlet />
       </div>

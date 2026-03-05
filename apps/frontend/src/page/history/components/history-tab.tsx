@@ -1,5 +1,5 @@
 import type { SavedPromptItem } from "@/lib/workbench-api";
-import type { NoticeInput, RequestErrorOptions } from "@/lib/workbench-shell";
+import type { RequestErrorOptions } from "@/lib/workbench-shell";
 import { useRequest } from "alova/client";
 import { Copy, Loader2, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { savedPromptsMethods } from "@/lib/workbench-api";
-import { HISTORY_PAGE_LIMIT } from "@/lib/workbench-shell";
+import { HISTORY_PAGE_LIMIT, useWorkbenchToast } from "@/lib/workbench-shell";
 import {
   createSnippet,
   dedupeSavedPromptItems,
@@ -26,7 +26,6 @@ import {
 interface HistoryTabProps {
   refreshToken: number;
   onRequestError: (error: unknown, options: RequestErrorOptions) => void;
-  onShowNotice: (notice: NoticeInput) => void;
 }
 
 interface SavedPromptsPageData {
@@ -44,8 +43,8 @@ export function HistoryTab(props: HistoryTabProps) {
   const {
     refreshToken,
     onRequestError,
-    onShowNotice,
   } = props;
+  const notice = useWorkbenchToast();
 
   const {
     send: sendQuerySavedPrompts,
@@ -131,8 +130,7 @@ export function HistoryTab(props: HistoryTabProps) {
   const copyHistoryPrompt = async (text: string) => {
     try {
       await writeClipboardText(text);
-      onShowNotice({
-        tone: "success",
+      notice.success({
         title: "复制成功",
         message: "历史提示词已复制到剪贴板。",
       });

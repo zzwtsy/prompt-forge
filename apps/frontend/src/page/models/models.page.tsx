@@ -17,7 +17,6 @@ export function ModelsPage() {
   const defaults = useWorkbenchShellStore(state => state.defaults);
   const providersLoading = useWorkbenchShellStore(state => state.providersLoading);
   const defaultsLoading = useWorkbenchShellStore(state => state.defaultsLoading);
-  const showNotice = useWorkbenchShellStore(state => state.showNotice);
   const setProviders = useWorkbenchShellStore(state => state.setProviders);
   const setDefaults = useWorkbenchShellStore(state => state.setDefaults);
   const setProvidersLoading = useWorkbenchShellStore(state => state.setProvidersLoading);
@@ -75,7 +74,6 @@ export function ModelsPage() {
       settingsLoading={providersLoading || defaultsLoading}
       refreshSettings={refreshModelSettings}
       onRequestError={handleRequestError}
-      onShowNotice={showNotice}
     />
   );
 }

@@ -38,7 +38,3 @@ export function formatDateTime(iso: string) {
     timeStyle: "short",
   }).format(date);
 }
-
-export async function writeClipboardText(text: string) {
-  await navigator.clipboard.writeText(text);
-}

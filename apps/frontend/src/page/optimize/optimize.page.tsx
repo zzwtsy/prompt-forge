@@ -1,20 +1,15 @@
 import { useWorkbenchErrorHandler } from "@/lib/workbench-shell";
-import { useWorkbenchShellStore } from "@/store";
-import { OptimizeTab } from "./components/optimize-tab";
+import { OptimizeContent } from "./components/optimize-content";
+import { useOptimizeController } from "./hooks/use-optimize-controller";
 
 export function OptimizePage() {
-  const providers = useWorkbenchShellStore(state => state.providers);
-  const providersLoading = useWorkbenchShellStore(state => state.providersLoading);
-  const defaultsLoading = useWorkbenchShellStore(state => state.defaultsLoading);
-  const bumpHistoryRefreshToken = useWorkbenchShellStore(state => state.bumpHistoryRefreshToken);
   const { handleRequestError } = useWorkbenchErrorHandler();
+  const {
+    state,
+    actions,
+  } = useOptimizeController({
+    onRequestError: handleRequestError,
+  });
 
-  return (
-    <OptimizeTab
-      providers={providers}
-      settingsLoading={providersLoading || defaultsLoading}
-      onRequestError={handleRequestError}
-      onPersistedHistory={bumpHistoryRefreshToken}
-    />
-  );
+  return <OptimizeContent state={state} actions={actions} />;
 }

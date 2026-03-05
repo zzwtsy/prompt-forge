@@ -19,13 +19,19 @@ export function useWorkbenchBootstrap() {
     data: providersResponse,
     loading: providersLoading,
     error: providersError,
-  } = useRequest(() => modelSettingsMethods.queryProviders(), { immediate: true });
+  } = useRequest(modelSettingsMethods.queryProviders, {
+    immediate: true,
+    force: true,
+  });
 
   const {
     data: defaultsResponse,
     loading: defaultsLoading,
     error: defaultsError,
-  } = useRequest(() => modelSettingsMethods.queryDefaults(), { immediate: true });
+  } = useRequest(modelSettingsMethods.queryDefaults, {
+    immediate: true,
+    force: true,
+  });
 
   useEffect(() => {
     setProvidersLoading(providersLoading);
@@ -42,7 +48,7 @@ export function useWorkbenchBootstrap() {
 
   useEffect(() => {
     const defaultsData = unwrapResponseData<ModelDefaultsData>(defaultsResponse);
-    if (defaultsData) {
+    if (defaultsData != null) {
       setDefaults(defaultsData);
     }
   }, [defaultsResponse, setDefaults]);

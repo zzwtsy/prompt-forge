@@ -53,11 +53,13 @@ export function useModelSettingsController(deps: UseModelSettingsControllerDeps)
   const setProvidersLoading = useWorkbenchShellStore(state => state.setProvidersLoading);
   const setDefaultsLoading = useWorkbenchShellStore(state => state.setDefaultsLoading);
 
-  const { send: refreshProviders } = useRequest(() => modelSettingsMethods.queryProviders(), {
+  const { send: refreshProviders } = useRequest(modelSettingsMethods.queryProviders, {
     immediate: false,
+    force: true,
   });
-  const { send: refreshDefaults } = useRequest(() => modelSettingsMethods.queryDefaults(), {
+  const { send: refreshDefaults } = useRequest(modelSettingsMethods.queryDefaults, {
     immediate: false,
+    force: true,
   });
 
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);

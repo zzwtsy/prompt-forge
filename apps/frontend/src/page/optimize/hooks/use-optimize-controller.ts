@@ -6,7 +6,6 @@ import type {
 import type {
   EvaluateResponseData,
   OptimizeResponseData,
-  SignedSaveDraft,
 } from "@/lib/workbench-api";
 import type { OptimizeFieldErrors } from "@/store";
 import { useRequest } from "alova/client";
@@ -69,34 +68,21 @@ export function useOptimizeController(deps: OptimizeControllerDeps): {
   const {
     loading: evaluatePending,
     send: sendEvaluate,
-  } = useRequest((payload: {
-    prompt: string;
-    modelId?: string;
-    temperature?: number;
-  }) => promptRuntimeMethods.evaluate(payload), {
+  } = useRequest(promptRuntimeMethods.evaluate, {
     immediate: false,
   });
 
   const {
     loading: optimizePending,
     send: sendOptimize,
-  } = useRequest((payload: {
-    prompt: string;
-    evaluationResult?: string;
-    modelId?: string;
-    temperature?: number;
-    evaluateContext?: {
-      modelId: string;
-      temperature?: number;
-    };
-  }) => promptRuntimeMethods.optimize(payload), {
+  } = useRequest(promptRuntimeMethods.optimize, {
     immediate: false,
   });
 
   const {
     loading: retryPending,
     send: sendRetrySave,
-  } = useRequest((draft: SignedSaveDraft) => savedPromptsMethods.retrySavePrompt(draft), {
+  } = useRequest(savedPromptsMethods.retrySavePrompt, {
     immediate: false,
   });
 

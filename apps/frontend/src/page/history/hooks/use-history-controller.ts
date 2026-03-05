@@ -32,8 +32,9 @@ export function useHistoryController(deps: HistoryControllerDeps): {
 
   const {
     send: sendQuerySavedPrompts,
-  } = useRequest((params: { limit: number; cursor?: string }) => savedPromptsMethods.querySavedPrompts(params), {
+  } = useRequest(savedPromptsMethods.querySavedPrompts, {
     immediate: false,
+    force: true,
   });
 
   const sendQuerySavedPromptsRef = useRef(sendQuerySavedPrompts);

@@ -3,14 +3,12 @@ import Apis from "@/api";
 interface EvaluateContext {
   modelId: string;
   temperature?: number;
-  maxTokens?: number;
 }
 
 interface PromptPayload {
   prompt: string;
   modelId?: string;
   temperature?: number;
-  maxTokens?: number;
 }
 
 interface OptimizePayload extends PromptPayload {

@@ -19,7 +19,6 @@ function createPayload() {
     optimizeModelId: "model_optimize_1",
     evaluateParams: {
       temperature: 0.2,
-      maxTokens: 256,
     },
     optimizeParams: {
       temperature: 0.4,

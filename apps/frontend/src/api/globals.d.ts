@@ -680,7 +680,6 @@ declare global {
        *   prompt: string
        *   modelId?: string
        *   temperature?: number
-       *   maxTokens?: number
        * }
        * ```
        *
@@ -721,7 +720,6 @@ declare global {
             prompt: string;
             modelId?: string;
             temperature?: number;
-            maxTokens?: number;
           };
         }
       >(
@@ -759,11 +757,9 @@ declare global {
        *   evaluationResult?: string
        *   modelId?: string
        *   temperature?: number
-       *   maxTokens?: number
        *   evaluateContext?: {
        *     modelId: string
        *     temperature?: number
-       *     maxTokens?: number
        *   }
        * }
        * ```
@@ -801,11 +797,9 @@ declare global {
        *           optimizeModelId: string
        *           evaluateParams: {
        *             temperature?: number
-       *             maxTokens?: number
        *           } | null
        *           optimizeParams: {
        *             temperature?: number
-       *             maxTokens?: number
        *           } | null
        *           createdAt: string
        *         }
@@ -847,11 +841,9 @@ declare global {
                   optimizeModelId: string;
                   evaluateParams: {
                     temperature?: number;
-                    maxTokens?: number;
                   } | null;
                   optimizeParams: {
                     temperature?: number;
-                    maxTokens?: number;
                   } | null;
                   createdAt: string;
                 };
@@ -866,11 +858,9 @@ declare global {
             evaluationResult?: string;
             modelId?: string;
             temperature?: number;
-            maxTokens?: number;
             evaluateContext?: {
               modelId: string;
               temperature?: number;
-              maxTokens?: number;
             };
           };
         }
@@ -906,11 +896,9 @@ declare global {
                   optimizeModelId: string;
                   evaluateParams: {
                     temperature?: number;
-                    maxTokens?: number;
                   } | null;
                   optimizeParams: {
                     temperature?: number;
-                    maxTokens?: number;
                   } | null;
                   createdAt: string;
                 };
@@ -1027,11 +1015,9 @@ declare global {
        *       optimizeModelId: string
        *       evaluateParams: {
        *         temperature?: number
-       *         maxTokens?: number
        *       } | null
        *       optimizeParams: {
        *         temperature?: number
-       *         maxTokens?: number
        *       } | null
        *       createdAt: string
        *     }
@@ -1080,11 +1066,9 @@ declare global {
                 optimizeModelId: string;
                 evaluateParams: {
                   temperature?: number;
-                  maxTokens?: number;
                 } | null;
                 optimizeParams: {
                   temperature?: number;
-                  maxTokens?: number;
                 } | null;
                 createdAt: string;
               };

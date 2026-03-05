@@ -5,7 +5,6 @@ import { aiModels } from "./ai-model-schema";
 
 export interface PromptCallParams {
   temperature?: number;
-  maxTokens?: number;
 }
 
 export const promptRuns = sqliteTable(

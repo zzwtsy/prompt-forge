@@ -9,7 +9,6 @@ const tags = ["SavedPrompts"];
 
 const PromptCallParamsSchema = z.object({
   temperature: z.number().min(0).max(2).optional(),
-  maxTokens: z.number().int().positive().optional(),
 });
 
 const SavedPromptItemSchema = z.object({

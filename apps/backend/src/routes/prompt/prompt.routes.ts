@@ -16,14 +16,12 @@ const ResolvedModelSchema = z.object({
 
 const PromptCallParamsSchema = z.object({
   temperature: z.number().min(0).max(2).optional(),
-  maxTokens: z.number().int().positive().optional(),
 });
 
 const EvaluatePromptBodySchema = z.object({
   prompt: z.string().min(1),
   modelId: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
-  maxTokens: z.number().int().positive().optional(),
 });
 
 const EvaluatePromptResponseSchema = z.object({
@@ -36,11 +34,9 @@ const OptimizePromptBodySchema = z.object({
   evaluationResult: z.string().optional(),
   modelId: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
-  maxTokens: z.number().int().positive().optional(),
   evaluateContext: z.object({
     modelId: z.string().min(1),
     temperature: z.number().min(0).max(2).optional(),
-    maxTokens: z.number().int().positive().optional(),
   }).optional(),
 });
 

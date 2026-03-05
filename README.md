@@ -24,7 +24,7 @@
 | `MS-06` | 已实现 | 支持手动新增模型（`POST /api/models`）。 |
 | `MS-07` | 已实现 | 支持评估默认模型与优化默认模型读取/设置（`GET/PUT /api/model-defaults`）。 |
 | `PO-01` | 已实现 | 评估与优化接口均支持显式传入 `modelId`。 |
-| `PO-02` | 已实现 | 支持 `temperature`、`maxTokens`，并映射到 AI SDK 调用参数。 |
+| `PO-02` | 已实现 | 支持 `temperature` 参数配置，并映射到 AI SDK 调用参数。 |
 | `PO-03` | 前端范围 | “复制评估结果”属于前端交互能力，不作为后端能力声明。 |
 | `PO-04` | 前端范围 | “复制优化提示词”属于前端交互能力，不作为后端能力声明。 |
 | `PO-05` | 已实现 | `POST /api/prompt/optimize` 优化后自动尝试保存，持久化 `prompt_runs/saved_prompts`。 |

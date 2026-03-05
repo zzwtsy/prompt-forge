@@ -76,7 +76,7 @@ describe("prompt routes", () => {
     expect(body.error?.code).toBe(AppErrorCode.UNAUTHORIZED.code);
   });
 
-  it("uses explicit modelId for evaluate and maps maxTokens to maxOutputTokens", async () => {
+  it("uses explicit modelId for evaluate and applies temperature", async () => {
     const resolved = {
       model: { id: "mock-model" } as any,
       resolvedModel: {
@@ -101,7 +101,6 @@ describe("prompt routes", () => {
         prompt: "请评估这个提示词",
         modelId: "m-explicit",
         temperature: 0.6,
-        maxTokens: 256,
       }),
     });
     const body = await parseBody(response);
@@ -114,7 +113,6 @@ describe("prompt routes", () => {
     expect(mockedGenerateText).toHaveBeenCalledWith(expect.objectContaining({
       model: resolved.model,
       temperature: 0.6,
-      maxOutputTokens: 256,
     }));
     expect(body.success).toBe(true);
     expect(body.data).toEqual({
@@ -156,7 +154,6 @@ describe("prompt routes", () => {
         evaluateContext: {
           modelId: "m-evaluate",
           temperature: 0.3,
-          maxTokens: 180,
         },
       }),
     });
@@ -178,7 +175,6 @@ describe("prompt routes", () => {
       optimizeModelId: "m-default",
       evaluateParams: {
         temperature: 0.3,
-        maxTokens: 180,
       },
       optimizeParams: null,
     });

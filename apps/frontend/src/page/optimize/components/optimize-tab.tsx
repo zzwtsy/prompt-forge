@@ -41,7 +41,6 @@ import {
   getEnabledModelOptions,
   hasField,
   parseOptionalFloat,
-  parseOptionalPositiveInteger,
   writeClipboardText,
 } from "../utils";
 
@@ -75,12 +74,8 @@ export function OptimizeTab(props: OptimizeTabProps) {
   const setOptimizeModelId = useOptimizeSessionStore(state => state.setOptimizeModelId);
   const evaluateTemperature = useOptimizeSessionStore(state => state.evaluateTemperature);
   const setEvaluateTemperature = useOptimizeSessionStore(state => state.setEvaluateTemperature);
-  const evaluateMaxTokens = useOptimizeSessionStore(state => state.evaluateMaxTokens);
-  const setEvaluateMaxTokens = useOptimizeSessionStore(state => state.setEvaluateMaxTokens);
   const optimizeTemperature = useOptimizeSessionStore(state => state.optimizeTemperature);
   const setOptimizeTemperature = useOptimizeSessionStore(state => state.setOptimizeTemperature);
-  const optimizeMaxTokens = useOptimizeSessionStore(state => state.optimizeMaxTokens);
-  const setOptimizeMaxTokens = useOptimizeSessionStore(state => state.setOptimizeMaxTokens);
   const evaluationResult = useOptimizeSessionStore(state => state.evaluationResult);
   const setEvaluationResult = useOptimizeSessionStore(state => state.setEvaluationResult);
   const optimizedPrompt = useOptimizeSessionStore(state => state.optimizedPrompt);
@@ -103,7 +98,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
     prompt: string;
     modelId?: string;
     temperature?: number;
-    maxTokens?: number;
   }) => promptRuntimeMethods.evaluate(payload), {
     immediate: false,
   });
@@ -116,11 +110,9 @@ export function OptimizeTab(props: OptimizeTabProps) {
     evaluationResult?: string;
     modelId?: string;
     temperature?: number;
-    maxTokens?: number;
     evaluateContext?: {
       modelId: string;
       temperature?: number;
-      maxTokens?: number;
     };
   }) => promptRuntimeMethods.optimize(payload), {
     immediate: false,
@@ -162,11 +154,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
       nextErrors.evaluateTemperature = true;
     }
 
-    const parsedEvaluateMaxTokens = parseOptionalPositiveInteger(evaluateMaxTokens);
-    if (parsedEvaluateMaxTokens === "invalid") {
-      nextErrors.evaluateMaxTokens = true;
-    }
-
     setFieldErrors(prev => ({
       ...prev,
       ...nextErrors,
@@ -185,7 +172,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
         prompt: string;
         modelId?: string;
         temperature?: number;
-        maxTokens?: number;
       } = {
         prompt: prompt.trim(),
       };
@@ -196,10 +182,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
 
       if (typeof parsedEvaluateTemperature === "number") {
         payload.temperature = parsedEvaluateTemperature;
-      }
-
-      if (typeof parsedEvaluateMaxTokens === "number") {
-        payload.maxTokens = parsedEvaluateMaxTokens;
       }
 
       const data = unwrapResponseData<EvaluateResponseData>(await sendEvaluate(payload));
@@ -213,7 +195,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
       setEvaluateContext({
         modelId: data.resolvedModel.modelId,
         temperature: payload.temperature,
-        maxTokens: payload.maxTokens,
       });
 
       notice.success({
@@ -230,9 +211,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
           }
           if (hasField(fields, ["temperature"])) {
             mapped.evaluateTemperature = true;
-          }
-          if (hasField(fields, ["maxTokens"])) {
-            mapped.evaluateMaxTokens = true;
           }
           setFieldErrors(prev => ({ ...prev, ...mapped }));
         },
@@ -255,11 +233,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
       nextErrors.optimizeTemperature = true;
     }
 
-    const parsedOptimizeMaxTokens = parseOptionalPositiveInteger(optimizeMaxTokens);
-    if (parsedOptimizeMaxTokens === "invalid") {
-      nextErrors.optimizeMaxTokens = true;
-    }
-
     setFieldErrors(prev => ({
       ...prev,
       ...nextErrors,
@@ -279,11 +252,9 @@ export function OptimizeTab(props: OptimizeTabProps) {
         evaluationResult?: string;
         modelId?: string;
         temperature?: number;
-        maxTokens?: number;
         evaluateContext?: {
           modelId: string;
           temperature?: number;
-          maxTokens?: number;
         };
       } = {
         prompt: prompt.trim(),
@@ -303,10 +274,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
 
       if (typeof parsedOptimizeTemperature === "number") {
         payload.temperature = parsedOptimizeTemperature;
-      }
-
-      if (typeof parsedOptimizeMaxTokens === "number") {
-        payload.maxTokens = parsedOptimizeMaxTokens;
       }
 
       const data = unwrapResponseData<OptimizeResponseData>(await sendOptimize(payload));
@@ -340,9 +307,6 @@ export function OptimizeTab(props: OptimizeTabProps) {
           }
           if (hasField(fields, ["temperature"])) {
             mapped.optimizeTemperature = true;
-          }
-          if (hasField(fields, ["maxTokens"])) {
-            mapped.optimizeMaxTokens = true;
           }
           setFieldErrors(prev => ({ ...prev, ...mapped }));
         },
@@ -432,33 +396,18 @@ export function OptimizeTab(props: OptimizeTabProps) {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <div className="grid gap-1.5">
-                      <Label>Temperature</Label>
-                      <Input
-                        value={evaluateTemperature}
-                        onChange={(event) => {
-                          setEvaluateTemperature(event.target.value);
-                          clearFieldError("evaluateTemperature");
-                        }}
-                        aria-invalid={fieldErrors.evaluateTemperature ? "true" : "false"}
-                        inputMode="decimal"
-                        placeholder="0 ~ 2"
-                      />
-                    </div>
-                    <div className="grid gap-1.5">
-                      <Label>Max Tokens</Label>
-                      <Input
-                        value={evaluateMaxTokens}
-                        onChange={(event) => {
-                          setEvaluateMaxTokens(event.target.value);
-                          clearFieldError("evaluateMaxTokens");
-                        }}
-                        aria-invalid={fieldErrors.evaluateMaxTokens ? "true" : "false"}
-                        inputMode="numeric"
-                        placeholder="正整数"
-                      />
-                    </div>
+                  <div className="grid gap-1.5">
+                    <Label>Temperature</Label>
+                    <Input
+                      value={evaluateTemperature}
+                      onChange={(event) => {
+                        setEvaluateTemperature(event.target.value);
+                        clearFieldError("evaluateTemperature");
+                      }}
+                      aria-invalid={fieldErrors.evaluateTemperature ? "true" : "false"}
+                      inputMode="decimal"
+                      placeholder="0 ~ 2"
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -482,33 +431,18 @@ export function OptimizeTab(props: OptimizeTabProps) {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <div className="grid gap-1.5">
-                      <Label>Temperature</Label>
-                      <Input
-                        value={optimizeTemperature}
-                        onChange={(event) => {
-                          setOptimizeTemperature(event.target.value);
-                          clearFieldError("optimizeTemperature");
-                        }}
-                        aria-invalid={fieldErrors.optimizeTemperature ? "true" : "false"}
-                        inputMode="decimal"
-                        placeholder="0 ~ 2"
-                      />
-                    </div>
-                    <div className="grid gap-1.5">
-                      <Label>Max Tokens</Label>
-                      <Input
-                        value={optimizeMaxTokens}
-                        onChange={(event) => {
-                          setOptimizeMaxTokens(event.target.value);
-                          clearFieldError("optimizeMaxTokens");
-                        }}
-                        aria-invalid={fieldErrors.optimizeMaxTokens ? "true" : "false"}
-                        inputMode="numeric"
-                        placeholder="正整数"
-                      />
-                    </div>
+                  <div className="grid gap-1.5">
+                    <Label>Temperature</Label>
+                    <Input
+                      value={optimizeTemperature}
+                      onChange={(event) => {
+                        setOptimizeTemperature(event.target.value);
+                        clearFieldError("optimizeTemperature");
+                      }}
+                      aria-invalid={fieldErrors.optimizeTemperature ? "true" : "false"}
+                      inputMode="decimal"
+                      placeholder="0 ~ 2"
+                    />
                   </div>
                 </CardContent>
               </Card>

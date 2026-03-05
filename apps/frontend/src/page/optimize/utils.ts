@@ -14,20 +14,6 @@ export function parseOptionalFloat(value: string): number | undefined | "invalid
   return parsed;
 }
 
-export function parseOptionalPositiveInteger(value: string): number | undefined | "invalid" {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-
-  const parsed = Number(trimmed);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return "invalid";
-  }
-
-  return parsed;
-}
-
 export function getEnabledModelOptions(providers: ProviderItem[]): ModelOption[] {
   return providers
     .filter(provider => provider.enabled)

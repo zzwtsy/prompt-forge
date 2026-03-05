@@ -7,7 +7,6 @@ export interface RuntimeModel {
 
 export interface PromptCallParams {
   temperature?: number;
-  maxTokens?: number;
 }
 
 export interface SaveDraftPayload {

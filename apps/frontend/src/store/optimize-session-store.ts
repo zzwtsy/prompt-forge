@@ -5,9 +5,7 @@ import { MODEL_DEFAULT_OPTION } from "@/lib/workbench-shell";
 export interface OptimizeFieldErrors {
   prompt?: boolean;
   evaluateTemperature?: boolean;
-  evaluateMaxTokens?: boolean;
   optimizeTemperature?: boolean;
-  optimizeMaxTokens?: boolean;
 }
 
 export interface OptimizeResolvedModel {
@@ -21,7 +19,6 @@ export interface EvaluateResolvedModel extends OptimizeResolvedModel {
 export interface EvaluateContext {
   modelId: string;
   temperature?: number;
-  maxTokens?: number;
 }
 
 interface OptimizeSessionStoreState {
@@ -29,9 +26,7 @@ interface OptimizeSessionStoreState {
   evaluateModelId: string;
   optimizeModelId: string;
   evaluateTemperature: string;
-  evaluateMaxTokens: string;
   optimizeTemperature: string;
-  optimizeMaxTokens: string;
   evaluationResult: string;
   optimizedPrompt: string;
   evaluateResolvedModel: EvaluateResolvedModel | null;
@@ -43,9 +38,7 @@ interface OptimizeSessionStoreState {
   setEvaluateModelId: (evaluateModelId: string) => void;
   setOptimizeModelId: (optimizeModelId: string) => void;
   setEvaluateTemperature: (evaluateTemperature: string) => void;
-  setEvaluateMaxTokens: (evaluateMaxTokens: string) => void;
   setOptimizeTemperature: (optimizeTemperature: string) => void;
-  setOptimizeMaxTokens: (optimizeMaxTokens: string) => void;
   setEvaluationResult: (evaluationResult: string) => void;
   setOptimizedPrompt: (optimizedPrompt: string) => void;
   setEvaluateResolvedModel: (evaluateResolvedModel: EvaluateResolvedModel | null) => void;
@@ -63,9 +56,7 @@ const initialState = {
   evaluateModelId: MODEL_DEFAULT_OPTION,
   optimizeModelId: MODEL_DEFAULT_OPTION,
   evaluateTemperature: "",
-  evaluateMaxTokens: "",
   optimizeTemperature: "",
-  optimizeMaxTokens: "",
   evaluationResult: "",
   optimizedPrompt: "",
   evaluateResolvedModel: null,
@@ -81,9 +72,7 @@ export const useOptimizeSessionStore = create<OptimizeSessionStoreState>(set => 
   setEvaluateModelId: evaluateModelId => set({ evaluateModelId }),
   setOptimizeModelId: optimizeModelId => set({ optimizeModelId }),
   setEvaluateTemperature: evaluateTemperature => set({ evaluateTemperature }),
-  setEvaluateMaxTokens: evaluateMaxTokens => set({ evaluateMaxTokens }),
   setOptimizeTemperature: optimizeTemperature => set({ optimizeTemperature }),
-  setOptimizeMaxTokens: optimizeMaxTokens => set({ optimizeMaxTokens }),
   setEvaluationResult: evaluationResult => set({ evaluationResult }),
   setOptimizedPrompt: optimizedPrompt => set({ optimizedPrompt }),
   setEvaluateResolvedModel: evaluateResolvedModel => set({ evaluateResolvedModel }),

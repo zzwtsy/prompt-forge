@@ -12,7 +12,6 @@ const DEFAULT_SAVE_DRAFT_TTL_MS = 15 * 60 * 1000;
 
 export const PromptCallParamsSchema = z.object({
   temperature: z.number().min(0).max(2).optional(),
-  maxTokens: z.number().int().positive().optional(),
 });
 
 export type PromptCallParams = z.infer<typeof PromptCallParamsSchema>;

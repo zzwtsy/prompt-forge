@@ -15,29 +15,21 @@ import { ok } from "@/lib/utils/http";
  */
 function buildCallSettings(options: {
   temperature?: number;
-  maxTokens?: number;
 }) {
   const settings: CallSettings = {};
 
   if (options.temperature != null)
     settings.temperature = options.temperature;
 
-  if (options.maxTokens != null)
-    settings.maxOutputTokens = options.maxTokens;
-
   return settings;
 }
 
 function buildPromptCallParams(options: {
   temperature?: number;
-  maxTokens?: number;
 }): PromptCallParams | null {
   const params: PromptCallParams = {};
   if (options.temperature != null)
     params.temperature = options.temperature;
-
-  if (options.maxTokens != null)
-    params.maxTokens = options.maxTokens;
 
   if (Object.keys(params).length === 0)
     return null;
@@ -91,7 +83,6 @@ export const evaluatePromptHandler: AppRouteHandler<typeof evaluatePromptRoute> 
     prompt: buildEvaluatePrompt(body.prompt),
     ...buildCallSettings({
       temperature: body.temperature,
-      maxTokens: body.maxTokens,
     }),
   });
 
@@ -115,7 +106,6 @@ export const optimizePromptHandler: AppRouteHandler<typeof optimizePromptRoute> 
     }),
     ...buildCallSettings({
       temperature: body.temperature,
-      maxTokens: body.maxTokens,
     }),
   });
 
@@ -127,11 +117,9 @@ export const optimizePromptHandler: AppRouteHandler<typeof optimizePromptRoute> 
     optimizeModelId: runtimeModel.resolvedModel.modelId,
     evaluateParams: buildPromptCallParams({
       temperature: body.evaluateContext?.temperature,
-      maxTokens: body.evaluateContext?.maxTokens,
     }),
     optimizeParams: buildPromptCallParams({
       temperature: body.temperature,
-      maxTokens: body.maxTokens,
     }),
   });
 

@@ -66,7 +66,6 @@
 evaluateContext?: {
   modelId: string;
   temperature?: number;
-  maxTokens?: number;
 }
 ```
 
@@ -155,7 +154,7 @@ evaluateContext?: {
 内部类型：
 
 ```ts
-type PromptCallParams = { temperature?: number; maxTokens?: number };
+type PromptCallParams = { temperature?: number };
 
 type SignedSaveDraft = {
   version: "v1";

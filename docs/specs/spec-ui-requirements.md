@@ -106,7 +106,7 @@
 
 1. `原始提示词`输入框（多行）。
 2. `评估模型`与`优化模型`两个选择区。
-3. 每个模型选择区下分别提供参数：`temperature`、`maxTokens`。
+3. 每个模型选择区下提供参数：`temperature`。
 4. 操作区按钮：`评估`、`优化`。
 5. `评估结果`面板（含复制）。
 6. `优化结果`面板（含复制、条件保存）。
@@ -119,7 +119,6 @@
 - 模型下拉必须支持：`使用默认模型（不传 modelId）`。
 - 参数约束：
   - `temperature`：`0 ~ 2`。
-  - `maxTokens`：正整数。
 
 ### 6.3 结果与复制
 
@@ -139,9 +138,9 @@
 ### 6.5 请求与响应映射
 
 - 评估：`POST /api/prompt/evaluate`
-  - 请求体：`prompt`、`modelId?`、`temperature?`、`maxTokens?`。
+  - 请求体：`prompt`、`modelId?`、`temperature?`。
 - 优化：`POST /api/prompt/optimize`
-  - 请求体：`prompt`、`evaluationResult?`、`modelId?`、`temperature?`、`maxTokens?`、`evaluateContext?`。
+  - 请求体：`prompt`、`evaluationResult?`、`modelId?`、`temperature?`、`evaluateContext?`。
   - 若已有评估执行记录，应传 `evaluateContext` 以保留追溯信息。
   - 响应体关键字段：`optimizedPrompt`、`resolvedModel`、`promptRunId`、`savedPromptId`、`persistence`。
 

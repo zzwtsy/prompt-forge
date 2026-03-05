@@ -660,25 +660,42 @@ export function ModelSettingsTab(props: ModelSettingsTabProps) {
                 未找到服务商。
               </div>
             )}
-            {filteredProviders.map(provider => (
-              <button
-                key={provider.id}
-                type="button"
-                onClick={() => setSelectedProviderId(provider.id)}
-                className={cn(
-                  "rounded-lg border px-3 py-2 text-left transition",
-                  provider.id === activeProviderId
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-medium">{provider.name}</p>
-                  <Badge variant={provider.enabled ? "default" : "outline"}>{provider.enabled ? "启用" : "停用"}</Badge>
-                </div>
-                <p className={cn("mt-1 truncate text-xs", provider.id === activeProviderId ? "text-slate-200" : "text-slate-500")}>{provider.code}</p>
-              </button>
-            ))}
+            {filteredProviders.map((provider) => {
+              const isActive = provider.id === activeProviderId;
+              const providerStatusClass = isActive
+                ? "border-white/20 bg-white/10 text-slate-100"
+                : provider.enabled
+                  ? "border-slate-300 bg-slate-50 text-slate-600"
+                  : "border-slate-200 bg-white text-slate-400";
+
+              return (
+                <Button
+                  key={provider.id}
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSelectedProviderId(provider.id)}
+                  className={cn(
+                    "h-auto w-full flex-col items-stretch justify-start gap-1 rounded-lg px-3 py-2 text-left transition-[background-color,border-color,color,box-shadow] duration-200",
+                    isActive
+                      ? "border-slate-900 bg-slate-900 text-white shadow-sm hover:border-slate-800 hover:bg-slate-800"
+                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50",
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={cn("min-w-0 flex-1 truncate text-sm font-medium", isActive ? "text-white" : "text-slate-800")}>
+                      {provider.name}
+                    </p>
+                    <Badge
+                      variant="outline"
+                      className={cn(providerStatusClass)}
+                    >
+                      {provider.enabled ? "启用" : "停用"}
+                    </Badge>
+                  </div>
+                  <p className={cn("truncate text-xs", isActive ? "text-slate-200" : "text-slate-500")}>{provider.code}</p>
+                </Button>
+              );
+            })}
           </CardContent>
         </Card>
 

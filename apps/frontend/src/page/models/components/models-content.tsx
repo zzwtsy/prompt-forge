@@ -1,6 +1,16 @@
 import type {
-  ModelSettingsControllerActions,
-  ModelSettingsControllerState,
+  CreateModelDialogSectionActions,
+  CreateModelDialogSectionState,
+  CreateProviderDialogSectionActions,
+  CreateProviderDialogSectionState,
+  DefaultModelsSectionActions,
+  DefaultModelsSectionState,
+  ProviderModelsSectionActions,
+  ProviderModelsSectionState,
+  ProviderSettingsSectionActions,
+  ProviderSettingsSectionState,
+  ProviderSidebarSectionActions,
+  ProviderSidebarSectionState,
 } from "../types";
 import { CreateModelDialog } from "./create-model-dialog";
 import { CreateProviderDialog } from "./create-provider-dialog";
@@ -9,92 +19,118 @@ import { ProviderSettingsCard } from "./provider-settings-card";
 import { ProviderSidebar } from "./provider-sidebar";
 
 interface ModelsContentProps {
-  state: ModelSettingsControllerState;
-  actions: ModelSettingsControllerActions;
+  defaultModels: {
+    state: DefaultModelsSectionState;
+    actions: DefaultModelsSectionActions;
+  };
+  providerSidebar: {
+    state: ProviderSidebarSectionState;
+    actions: ProviderSidebarSectionActions;
+  };
+  providerSettings: {
+    state: ProviderSettingsSectionState;
+    actions: ProviderSettingsSectionActions;
+  };
+  providerModels: {
+    state: ProviderModelsSectionState;
+    actions: ProviderModelsSectionActions;
+  };
+  createProviderDialog: {
+    state: CreateProviderDialogSectionState;
+    actions: CreateProviderDialogSectionActions;
+  };
+  createModelDialog: {
+    state: CreateModelDialogSectionState;
+    actions: CreateModelDialogSectionActions;
+  };
 }
 
 export function ModelsContent(props: ModelsContentProps) {
   const {
-    state,
-    actions,
+    defaultModels,
+    providerSidebar,
+    providerSettings,
+    providerModels,
+    createProviderDialog,
+    createModelDialog,
   } = props;
 
   return (
     <div className="grid gap-4">
       <DefaultModelsCard
-        defaultEvaluateModelId={state.defaultEvaluateModelId}
-        defaultOptimizeModelId={state.defaultOptimizeModelId}
-        defaultModelOptions={state.defaultModelOptions}
-        savingDefaults={state.savingDefaults}
-        settingsLoading={state.settingsLoading}
-        onEvaluateModelChange={actions.setDefaultEvaluateModelId}
-        onOptimizeModelChange={actions.setDefaultOptimizeModelId}
-        onSave={actions.saveDefaults}
+        defaultEvaluateModelId={defaultModels.state.defaultEvaluateModelId}
+        defaultOptimizeModelId={defaultModels.state.defaultOptimizeModelId}
+        defaultModelOptions={defaultModels.state.defaultModelOptions}
+        savingDefaults={defaultModels.state.savingDefaults}
+        settingsLoading={defaultModels.state.settingsLoading}
+        onEvaluateModelChange={defaultModels.actions.setDefaultEvaluateModelId}
+        onOptimizeModelChange={defaultModels.actions.setDefaultOptimizeModelId}
+        onSave={defaultModels.actions.saveDefaults}
       />
 
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
         <ProviderSidebar
-          providers={state.filteredProviders}
-          activeProviderId={state.activeProviderId}
-          providerSearch={state.providerSearch}
-          onProviderSearchChange={actions.setProviderSearch}
-          onSelectProvider={actions.selectProvider}
-          onOpenAddProvider={() => actions.openAddProvider(true)}
+          providers={providerSidebar.state.filteredProviders}
+          activeProviderId={providerSidebar.state.activeProviderId}
+          providerSearch={providerSidebar.state.providerSearch}
+          onProviderSearchChange={providerSidebar.actions.setProviderSearch}
+          onSelectProvider={providerSidebar.actions.selectProvider}
+          onOpenAddProvider={() => createProviderDialog.actions.setOpen(true)}
         />
 
         <ProviderSettingsCard
-          selectedProvider={state.selectedProvider}
-          selectedProviderDraft={state.selectedProviderDraft}
-          models={state.filteredModels}
-          validationErrors={state.validationErrors}
-          modelSearch={state.modelSearch}
-          modelDisplayDrafts={state.modelDisplayDrafts}
-          togglingModelIds={state.togglingModelIds}
-          savingDisplayNameIds={state.savingDisplayNameIds}
-          savingProvider={state.savingProvider}
-          syncingModels={state.syncingModels}
-          settingsLoading={state.settingsLoading}
-          onSelectedProviderNameChange={actions.setSelectedProviderName}
-          onSelectedProviderBaseUrlChange={actions.setSelectedProviderBaseUrl}
-          onSelectedProviderApiKeyChange={actions.setSelectedProviderApiKey}
-          onToggleSelectedProviderEnabled={actions.toggleSelectedProviderEnabled}
-          onToggleSelectedProviderClearApiKey={actions.toggleSelectedProviderClearApiKey}
-          onSaveProvider={actions.saveProvider}
-          onSyncModels={actions.syncModels}
-          onOpenAddModel={() => actions.openAddModel(true)}
-          onModelSearchChange={actions.setModelSearch}
-          onToggleModel={actions.toggleModel}
-          onModelDisplayNameChange={actions.setModelDisplayDraft}
-          onSaveModelDisplayName={actions.saveModelDisplayName}
+          selectedProvider={providerSettings.state.selectedProvider}
+          selectedProviderDraft={providerSettings.state.selectedProviderDraft}
+          models={providerModels.state.filteredModels}
+          validationErrors={providerSettings.state.validationErrors}
+          modelSearch={providerModels.state.modelSearch}
+          modelDisplayDrafts={providerModels.state.modelDisplayDrafts}
+          togglingModelIds={providerModels.state.togglingModelIds}
+          savingDisplayNameIds={providerModels.state.savingDisplayNameIds}
+          savingProvider={providerSettings.state.savingProvider}
+          syncingModels={providerSettings.state.syncingModels}
+          settingsLoading={providerSettings.state.settingsLoading}
+          onSelectedProviderNameChange={providerSettings.actions.setSelectedProviderName}
+          onSelectedProviderBaseUrlChange={providerSettings.actions.setSelectedProviderBaseUrl}
+          onSelectedProviderApiKeyChange={providerSettings.actions.setSelectedProviderApiKey}
+          onToggleSelectedProviderEnabled={providerSettings.actions.toggleSelectedProviderEnabled}
+          onToggleSelectedProviderClearApiKey={providerSettings.actions.toggleSelectedProviderClearApiKey}
+          onSaveProvider={providerSettings.actions.saveProvider}
+          onSyncModels={providerSettings.actions.syncModels}
+          onOpenAddModel={() => createModelDialog.actions.setOpen(true)}
+          onModelSearchChange={providerModels.actions.setModelSearch}
+          onToggleModel={providerModels.actions.toggleModel}
+          onModelDisplayNameChange={providerModels.actions.setModelDisplayDraft}
+          onSaveModelDisplayName={providerModels.actions.saveModelDisplayName}
         />
       </div>
 
       <CreateProviderDialog
-        open={state.addProviderOpen}
-        name={state.addProviderName}
-        baseUrl={state.addProviderBaseUrl}
-        apiKey={state.addProviderApiKey}
-        adding={state.addingProvider}
-        nameInvalid={!!state.validationErrors.addProviderName}
-        baseUrlInvalid={!!state.validationErrors.addProviderBaseUrl}
-        onOpenChange={actions.openAddProvider}
-        onNameChange={actions.setAddProviderName}
-        onBaseUrlChange={actions.setAddProviderBaseUrl}
-        onApiKeyChange={actions.setAddProviderApiKey}
-        onCreate={actions.createProvider}
+        open={createProviderDialog.state.open}
+        name={createProviderDialog.state.name}
+        baseUrl={createProviderDialog.state.baseUrl}
+        apiKey={createProviderDialog.state.apiKey}
+        adding={createProviderDialog.state.addingProvider}
+        nameInvalid={!!createProviderDialog.state.validationErrors.addProviderName}
+        baseUrlInvalid={!!createProviderDialog.state.validationErrors.addProviderBaseUrl}
+        onOpenChange={createProviderDialog.actions.setOpen}
+        onNameChange={createProviderDialog.actions.setName}
+        onBaseUrlChange={createProviderDialog.actions.setBaseUrl}
+        onApiKeyChange={createProviderDialog.actions.setApiKey}
+        onCreate={createProviderDialog.actions.createProvider}
       />
 
       <CreateModelDialog
-        open={state.addModelOpen}
-        modelName={state.addModelName}
-        displayName={state.addModelDisplayName}
-        adding={state.addingModel}
-        modelNameInvalid={!!state.validationErrors.addModelName}
-        providerAvailable={state.selectedProvider !== null}
-        onOpenChange={actions.openAddModel}
-        onModelNameChange={actions.setAddModelName}
-        onDisplayNameChange={actions.setAddModelDisplayName}
-        onCreate={actions.createModel}
+        open={createModelDialog.state.open}
+        modelName={createModelDialog.state.modelName}
+        displayName={createModelDialog.state.displayName}
+        adding={createModelDialog.state.addingModel}
+        modelNameInvalid={!!createModelDialog.state.validationErrors.addModelName}
+        providerAvailable={createModelDialog.state.providerAvailable}
+        onOpenChange={createModelDialog.actions.setOpen}
+        onModelNameChange={createModelDialog.actions.setModelName}
+        onDisplayNameChange={createModelDialog.actions.setDisplayName}
+        onCreate={createModelDialog.actions.createModel}
       />
     </div>
   );

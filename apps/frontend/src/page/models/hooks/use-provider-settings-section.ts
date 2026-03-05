@@ -2,8 +2,7 @@ import type {
   ModelSettingsSectionDeps,
   ModelSettingsValidationErrors,
   ProviderFormDraft,
-  ProviderSettingsSectionActions,
-  ProviderSettingsSectionState,
+  ProviderSettingsSection,
 } from "../types";
 import type {
   ProviderItem,
@@ -32,10 +31,7 @@ function createProviderDraft(provider: ProviderItem): ProviderFormDraft {
   };
 }
 
-export function useProviderSettingsSection(deps: UseProviderSettingsSectionDeps): {
-  state: ProviderSettingsSectionState;
-  actions: ProviderSettingsSectionActions;
-} {
+export function useProviderSettingsSection(deps: UseProviderSettingsSectionDeps): ProviderSettingsSection {
   const {
     selectedProvider,
     settingsLoading,

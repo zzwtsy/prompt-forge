@@ -1,7 +1,6 @@
 import type {
   ModelSettingsSectionDeps,
-  ProviderModelsSectionActions,
-  ProviderModelsSectionState,
+  ProviderModelsSection,
 } from "../types";
 import type {
   ModelItem,
@@ -16,10 +15,7 @@ interface UseProviderModelsSectionDeps extends ModelSettingsSectionDeps {
   selectedProvider: ProviderItem | null;
 }
 
-export function useProviderModelsSection(deps: UseProviderModelsSectionDeps): {
-  state: ProviderModelsSectionState;
-  actions: ProviderModelsSectionActions;
-} {
+export function useProviderModelsSection(deps: UseProviderModelsSectionDeps): ProviderModelsSection {
   const {
     selectedProvider,
     onRequestError,

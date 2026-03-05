@@ -1,3 +1,4 @@
+import type { CreateProviderDialogSection } from "../types";
 import { Loader2 } from "lucide-react";
 import {
   AlertDialog,
@@ -13,38 +14,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface CreateProviderDialogProps {
-  open: boolean;
-  name: string;
-  baseUrl: string;
-  apiKey: string;
-  adding: boolean;
-  nameInvalid: boolean;
-  baseUrlInvalid: boolean;
-  onOpenChange: (open: boolean) => void;
-  onNameChange: (value: string) => void;
-  onBaseUrlChange: (value: string) => void;
-  onApiKeyChange: (value: string) => void;
-  onCreate: () => Promise<void>;
+  section: CreateProviderDialogSection;
 }
 
 export function CreateProviderDialog(props: CreateProviderDialogProps) {
-  const {
-    open,
-    name,
-    baseUrl,
-    apiKey,
-    adding,
-    nameInvalid,
-    baseUrlInvalid,
-    onOpenChange,
-    onNameChange,
-    onBaseUrlChange,
-    onApiKeyChange,
-    onCreate,
-  } = props;
+  const { section } = props;
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={section.state.open} onOpenChange={section.actions.setOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>添加自定义服务商</AlertDialogTitle>
@@ -55,20 +32,20 @@ export function CreateProviderDialog(props: CreateProviderDialogProps) {
           <div className="grid gap-1.5">
             <Label>服务商名称</Label>
             <Input
-              value={name}
-              aria-invalid={nameInvalid ? "true" : "false"}
+              value={section.state.name}
+              aria-invalid={section.state.validationErrors.addProviderName ? "true" : "false"}
               onChange={(event) => {
-                onNameChange(event.target.value);
+                section.actions.setName(event.target.value);
               }}
             />
           </div>
           <div className="grid gap-1.5">
             <Label>BaseURL</Label>
             <Input
-              value={baseUrl}
-              aria-invalid={baseUrlInvalid ? "true" : "false"}
+              value={section.state.baseUrl}
+              aria-invalid={section.state.validationErrors.addProviderBaseUrl ? "true" : "false"}
               onChange={(event) => {
-                onBaseUrlChange(event.target.value);
+                section.actions.setBaseUrl(event.target.value);
               }}
               placeholder="https://api.example.com/v1"
             />
@@ -77,21 +54,21 @@ export function CreateProviderDialog(props: CreateProviderDialogProps) {
             <Label>API Key（可选）</Label>
             <Input
               type="password"
-              value={apiKey}
-              onChange={event => onApiKeyChange(event.target.value)}
+              value={section.state.apiKey}
+              onChange={event => section.actions.setApiKey(event.target.value)}
             />
           </div>
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={adding}>取消</AlertDialogCancel>
+          <AlertDialogCancel disabled={section.state.addingProvider}>取消</AlertDialogCancel>
           <Button
-            disabled={adding}
+            disabled={section.state.addingProvider}
             onClick={() => {
-              void onCreate();
+              void section.actions.createProvider();
             }}
           >
-            {adding && <Loader2 className="mr-1 size-4 animate-spin" />}
+            {section.state.addingProvider && <Loader2 className="mr-1 size-4 animate-spin" />}
             创建服务商
           </Button>
         </AlertDialogFooter>

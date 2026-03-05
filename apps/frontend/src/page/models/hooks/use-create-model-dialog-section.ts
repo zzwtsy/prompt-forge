@@ -1,6 +1,5 @@
 import type {
-  CreateModelDialogSectionActions,
-  CreateModelDialogSectionState,
+  CreateModelDialogSection,
   ModelSettingsSectionDeps,
   ModelSettingsValidationErrors,
 } from "../types";
@@ -17,10 +16,7 @@ interface UseCreateModelDialogSectionDeps extends ModelSettingsSectionDeps {
   selectedProvider: ProviderItem | null;
 }
 
-export function useCreateModelDialogSection(deps: UseCreateModelDialogSectionDeps): {
-  state: CreateModelDialogSectionState;
-  actions: CreateModelDialogSectionActions;
-} {
+export function useCreateModelDialogSection(deps: UseCreateModelDialogSectionDeps): CreateModelDialogSection {
   const {
     selectedProvider,
     onRequestError,

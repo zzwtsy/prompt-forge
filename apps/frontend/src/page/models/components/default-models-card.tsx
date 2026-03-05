@@ -1,4 +1,4 @@
-import type { ModelOption } from "@/lib/workbench-api";
+import type { DefaultModelsSection } from "../types";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,27 +19,11 @@ import {
 import { MODEL_NONE_OPTION } from "@/lib/workbench-shell";
 
 interface DefaultModelsCardProps {
-  defaultEvaluateModelId: string;
-  defaultOptimizeModelId: string;
-  defaultModelOptions: ModelOption[];
-  savingDefaults: boolean;
-  settingsLoading: boolean;
-  onEvaluateModelChange: (value: string) => void;
-  onOptimizeModelChange: (value: string) => void;
-  onSave: () => Promise<void>;
+  section: DefaultModelsSection;
 }
 
 export function DefaultModelsCard(props: DefaultModelsCardProps) {
-  const {
-    defaultEvaluateModelId,
-    defaultOptimizeModelId,
-    defaultModelOptions,
-    savingDefaults,
-    settingsLoading,
-    onEvaluateModelChange,
-    onOptimizeModelChange,
-    onSave,
-  } = props;
+  const { section } = props;
 
   return (
     <Card className="border-slate-200/90 bg-white/85 shadow-sm backdrop-blur">
@@ -49,25 +33,28 @@ export function DefaultModelsCard(props: DefaultModelsCardProps) {
           <CardDescription>设置“评估”与“优化”未显式指定模型时的默认执行模型。</CardDescription>
         </div>
         <Button
-          disabled={savingDefaults || settingsLoading}
+          disabled={section.state.savingDefaults || section.state.settingsLoading}
           onClick={() => {
-            void onSave();
+            void section.actions.saveDefaults();
           }}
         >
-          {savingDefaults && <Loader2 className="mr-1 size-4 animate-spin" />}
+          {section.state.savingDefaults && <Loader2 className="mr-1 size-4 animate-spin" />}
           保存默认模型
         </Button>
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-2">
         <div className="grid gap-2">
           <Label>默认评估模型</Label>
-          <Select value={defaultEvaluateModelId} onValueChange={onEvaluateModelChange}>
+          <Select
+            value={section.state.defaultEvaluateModelId}
+            onValueChange={section.actions.setDefaultEvaluateModelId}
+          >
             <SelectTrigger className="w-full bg-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={MODEL_NONE_OPTION}>不设置默认模型</SelectItem>
-              {defaultModelOptions.map(option => (
+              {section.state.defaultModelOptions.map(option => (
                 <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>
               ))}
             </SelectContent>
@@ -75,13 +62,16 @@ export function DefaultModelsCard(props: DefaultModelsCardProps) {
         </div>
         <div className="grid gap-2">
           <Label>默认优化模型</Label>
-          <Select value={defaultOptimizeModelId} onValueChange={onOptimizeModelChange}>
+          <Select
+            value={section.state.defaultOptimizeModelId}
+            onValueChange={section.actions.setDefaultOptimizeModelId}
+          >
             <SelectTrigger className="w-full bg-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={MODEL_NONE_OPTION}>不设置默认模型</SelectItem>
-              {defaultModelOptions.map(option => (
+              {section.state.defaultModelOptions.map(option => (
                 <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>
               ))}
             </SelectContent>

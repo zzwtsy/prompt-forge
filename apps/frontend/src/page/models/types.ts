@@ -26,6 +26,11 @@ export interface ModelSettingsSectionDeps {
   reloadSettings: (silent?: boolean) => Promise<boolean>;
 }
 
+export interface SectionVM<S, A> {
+  state: S;
+  actions: A;
+}
+
 export interface DefaultModelsSectionState {
   settingsLoading: boolean;
   defaultModelOptions: ModelOption[];
@@ -40,6 +45,8 @@ export interface DefaultModelsSectionActions {
   saveDefaults: () => Promise<void>;
 }
 
+export type DefaultModelsSection = SectionVM<DefaultModelsSectionState, DefaultModelsSectionActions>;
+
 export interface ProviderSidebarSectionState {
   providerSearch: string;
   filteredProviders: ProviderItem[];
@@ -51,6 +58,8 @@ export interface ProviderSidebarSectionActions {
   setProviderSearch: (value: string) => void;
   selectProvider: (providerId: string) => void;
 }
+
+export type ProviderSidebarSection = SectionVM<ProviderSidebarSectionState, ProviderSidebarSectionActions>;
 
 export interface ProviderSettingsSectionState {
   selectedProvider: ProviderItem | null;
@@ -71,6 +80,8 @@ export interface ProviderSettingsSectionActions {
   syncModels: () => Promise<void>;
 }
 
+export type ProviderSettingsSection = SectionVM<ProviderSettingsSectionState, ProviderSettingsSectionActions>;
+
 export interface ProviderModelsSectionState {
   modelSearch: string;
   filteredModels: ModelItem[];
@@ -85,6 +96,8 @@ export interface ProviderModelsSectionActions {
   setModelDisplayDraft: (modelId: string, value: string) => void;
   saveModelDisplayName: (model: ModelItem) => Promise<void>;
 }
+
+export type ProviderModelsSection = SectionVM<ProviderModelsSectionState, ProviderModelsSectionActions>;
 
 export interface CreateProviderDialogSectionState {
   open: boolean;
@@ -103,6 +116,8 @@ export interface CreateProviderDialogSectionActions {
   createProvider: () => Promise<void>;
 }
 
+export type CreateProviderDialogSection = SectionVM<CreateProviderDialogSectionState, CreateProviderDialogSectionActions>;
+
 export interface CreateModelDialogSectionState {
   open: boolean;
   modelName: string;
@@ -117,4 +132,15 @@ export interface CreateModelDialogSectionActions {
   setModelName: (value: string) => void;
   setDisplayName: (value: string) => void;
   createModel: () => Promise<void>;
+}
+
+export type CreateModelDialogSection = SectionVM<CreateModelDialogSectionState, CreateModelDialogSectionActions>;
+
+export interface ModelsSections {
+  defaultModels: DefaultModelsSection;
+  providerSidebar: ProviderSidebarSection;
+  providerSettings: ProviderSettingsSection;
+  providerModels: ProviderModelsSection;
+  createProviderDialog: CreateProviderDialogSection;
+  createModelDialog: CreateModelDialogSection;
 }

@@ -1,6 +1,5 @@
 import type {
-  CreateProviderDialogSectionActions,
-  CreateProviderDialogSectionState,
+  CreateProviderDialogSection,
   ModelSettingsSectionDeps,
   ModelSettingsValidationErrors,
 } from "../types";
@@ -13,10 +12,7 @@ import {
 } from "@/lib/workbench-shell";
 import { isValidUrl } from "../utils";
 
-export function useCreateProviderDialogSection(deps: ModelSettingsSectionDeps): {
-  state: CreateProviderDialogSectionState;
-  actions: CreateProviderDialogSectionActions;
-} {
+export function useCreateProviderDialogSection(deps: ModelSettingsSectionDeps): CreateProviderDialogSection {
   const {
     onRequestError,
     reloadSettings,

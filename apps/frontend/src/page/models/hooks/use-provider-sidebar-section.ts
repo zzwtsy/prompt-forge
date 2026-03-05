@@ -1,6 +1,5 @@
 import type {
-  ProviderSidebarSectionActions,
-  ProviderSidebarSectionState,
+  ProviderSidebarSection,
 } from "../types";
 import type { ProviderItem } from "@/lib/workbench-api";
 import { useState } from "react";
@@ -9,10 +8,7 @@ interface UseProviderSidebarSectionDeps {
   providers: ProviderItem[];
 }
 
-export function useProviderSidebarSection(deps: UseProviderSidebarSectionDeps): {
-  state: ProviderSidebarSectionState;
-  actions: ProviderSidebarSectionActions;
-} {
+export function useProviderSidebarSection(deps: UseProviderSidebarSectionDeps): ProviderSidebarSection {
   const { providers } = deps;
 
   const [providerSearch, setProviderSearch] = useState("");

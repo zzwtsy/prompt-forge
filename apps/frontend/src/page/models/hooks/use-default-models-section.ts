@@ -1,6 +1,5 @@
 import type {
-  DefaultModelsSectionActions,
-  DefaultModelsSectionState,
+  DefaultModelsSection,
   ModelSettingsSectionDeps,
 } from "../types";
 import type {
@@ -22,10 +21,7 @@ interface UseDefaultModelsSectionDeps extends ModelSettingsSectionDeps {
   settingsLoading: boolean;
 }
 
-export function useDefaultModelsSection(deps: UseDefaultModelsSectionDeps): {
-  state: DefaultModelsSectionState;
-  actions: DefaultModelsSectionActions;
-} {
+export function useDefaultModelsSection(deps: UseDefaultModelsSectionDeps): DefaultModelsSection {
   const {
     providers,
     defaults,

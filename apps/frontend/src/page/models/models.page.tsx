@@ -1,3 +1,4 @@
+import type { ModelsSections } from "./types";
 import { useWorkbenchErrorHandler } from "@/lib/workbench-shell";
 import { ModelsContent } from "./components/models-content";
 import { useCreateModelDialogSection } from "./hooks/use-create-model-dialog-section";
@@ -51,14 +52,14 @@ export function ModelsPage() {
     reloadSettings: resource.reloadSettings,
   });
 
-  return (
-    <ModelsContent
-      defaultModels={defaultModels}
-      providerSidebar={providerSidebar}
-      providerSettings={providerSettings}
-      providerModels={providerModels}
-      createProviderDialog={createProviderDialog}
-      createModelDialog={createModelDialog}
-    />
-  );
+  const sections: ModelsSections = {
+    defaultModels,
+    providerSidebar,
+    providerSettings,
+    providerModels,
+    createProviderDialog,
+    createModelDialog,
+  };
+
+  return <ModelsContent sections={sections} />;
 }

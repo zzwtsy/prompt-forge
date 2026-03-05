@@ -1,4 +1,4 @@
-import type { ProviderItem } from "@/lib/workbench-api";
+import type { ProviderSidebarSection } from "../types";
 import { Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,23 +12,12 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 interface ProviderSidebarProps {
-  providers: ProviderItem[];
-  activeProviderId: string | null;
-  providerSearch: string;
-  onProviderSearchChange: (value: string) => void;
-  onSelectProvider: (providerId: string) => void;
+  section: ProviderSidebarSection;
   onOpenAddProvider: () => void;
 }
 
 export function ProviderSidebar(props: ProviderSidebarProps) {
-  const {
-    providers,
-    activeProviderId,
-    providerSearch,
-    onProviderSearchChange,
-    onSelectProvider,
-    onOpenAddProvider,
-  } = props;
+  const { section, onOpenAddProvider } = props;
 
   return (
     <Card className="border-slate-200/90 bg-white/85 shadow-sm backdrop-blur">
@@ -41,19 +30,19 @@ export function ProviderSidebar(props: ProviderSidebarProps) {
           </Button>
         </div>
         <Input
-          value={providerSearch}
-          onChange={event => onProviderSearchChange(event.target.value)}
+          value={section.state.providerSearch}
+          onChange={event => section.actions.setProviderSearch(event.target.value)}
           placeholder="搜索服务商"
         />
       </CardHeader>
       <CardContent className="grid gap-2">
-        {providers.length === 0 && (
+        {section.state.filteredProviders.length === 0 && (
           <div className="rounded-lg border border-dashed border-slate-300 px-3 py-4 text-center text-sm text-slate-500">
             未找到服务商。
           </div>
         )}
-        {providers.map((provider) => {
-          const isActive = provider.id === activeProviderId;
+        {section.state.filteredProviders.map((provider) => {
+          const isActive = provider.id === section.state.activeProviderId;
           const providerStatusClass = isActive
             ? "border-white/20 bg-white/10 text-slate-100"
             : provider.enabled
@@ -65,7 +54,7 @@ export function ProviderSidebar(props: ProviderSidebarProps) {
               key={provider.id}
               type="button"
               variant="outline"
-              onClick={() => onSelectProvider(provider.id)}
+              onClick={() => section.actions.selectProvider(provider.id)}
               className={cn(
                 "h-auto w-full flex-col items-stretch justify-start gap-1 rounded-lg px-3 py-2 text-left transition-[background-color,border-color,color,box-shadow] duration-200",
                 isActive

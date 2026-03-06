@@ -20,6 +20,11 @@ Treat generated files as build artifacts:
 - For any task touching `apps/backend/**` (routes, OpenAPI definitions, transaction logic, `AppError`/`codes.ts`, backend comments), use the local skill `.agents/skills/backend-conventions/SKILL.md` as the primary execution guide.
 - If backend convention text conflicts with repository-level instructions, `AGENTS.md` takes precedence.
 
+## Frontend Task Entry Rule
+
+- For any task touching `apps/frontend/**` (TanStack Router route setup, page layering, Alova request orchestration, ApiEnvelope error handling, Context/state consistency, frontend comments), use the local skill `.agents/skills/frontend-conventions/SKILL.md` as the primary execution guide.
+- If frontend convention text conflicts with repository-level instructions, `AGENTS.md` takes precedence.
+
 ## Build, Test, and Development Commands
 
 - `bun install`: install all workspace dependencies.

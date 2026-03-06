@@ -7,10 +7,19 @@
 ### 后端实现状态（按当前代码）
 
 - 已实现：提示词评估与优化接口、模型服务商与模型管理接口、默认评估/优化模型配置、优化结果保存查询与重试保存链路、统一鉴权与错误响应。
-- 前端待建设：优化结果保存页面（后端接口已提供）。
+- 前端已实现：`/optimize`、`/models`、`/history` 三个业务页面与核心交互链路（评估/优化、模型设置、历史查询与复制）。
+- 前端持续演进：工程规范、拆分策略与可访问性/测试基线按前端规范文档持续收敛。
 
 详细需求见：`docs/specs/spec-product-requirements.md`。  
 说明：需求文档是目标态定义；README 中“已实现/未实现”按当前仓库后端代码（`apps/backend/src`）标注。
+
+### 前端工程规范入口
+
+- `apps/frontend/**` 相关实现规范请优先参考：`.agents/skills/frontend-conventions/SKILL.md`
+- 规范正文与模板：
+  - `.agents/skills/frontend-conventions/references/frontend-conventions.full.md`
+  - `.agents/skills/frontend-conventions/references/templates.md`
+  - `.agents/skills/frontend-conventions/references/checklists.md`
 
 ## 后端能力实现矩阵（对齐 spec-product-requirements.md）
 

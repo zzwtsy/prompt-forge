@@ -41,3 +41,4 @@ docs/
 - 新文档必须放入上述分类目录，不再放在 `docs/` 根目录。
 - 任何重命名/移动都必须同步更新跨文档引用与 `README.md` 中的文档索引。
 - 后端规范相关引用统一以 `AGENTS.md` 与 `.agents/skills/backend-conventions/SKILL.md` 为准。
+- 工程实现规范入口位于 `.agents/skills/*/references`（例如前端规范），不纳入 `docs/` 目录树。

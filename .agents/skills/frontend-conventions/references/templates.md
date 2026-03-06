@@ -14,6 +14,9 @@
 - [8. 薄 service 模板（方法工厂）](#tpl-thin-service)
 - [9. request error mapper 模板](#tpl-error-mapper)
 - [10. React Context 标准模板（React 19）](#tpl-react-context)
+- [11. Page + Content 与内联选择模板](#tpl-page-content)
+- [12. 大 hook 拆分模板](#tpl-large-hook-split)
+- [13. SectionVM 页面装配模板](#tpl-section-vm)
 
 <a id="tpl-root-redirect"></a>
 
@@ -72,9 +75,10 @@ src/
     optimize/
       optimize.page.tsx
       components/
+        optimize-content.tsx    # 可选：仅当需要容器编排价值时保留
         optimize-form.tsx
       hooks/
-        use-optimize-state.ts
+        use-optimize-page-state.ts
       services/
         optimize.service.ts
       types.ts
@@ -105,6 +109,11 @@ export function OptimizePage() {
 
 ## 4. useRequest 首屏加载模板
 
+适用边界：
+
+- 优先用于局部独立请求组件（不会承担跨组件业务编排）。
+- 业务主流程请求建议放在 `Page orchestration hook` 或 `Section hook`。
+
 ```tsx
 // page/optimize/components/model-list.tsx
 import { useRequest } from "alova/client";
@@ -132,6 +141,11 @@ export function ModelList() {
 
 ## 5. useRequest 手动提交模板
 
+适用边界：
+
+- 适合单一动作按钮或局部提交组件。
+- 若涉及跨组件协同（校验链路、写后刷新、错误分发），应上移到 page/section hook。
+
 ```tsx
 // page/optimize/components/optimize-submit-button.tsx
 import { useRequest } from "alova/client";
@@ -158,6 +172,11 @@ export function OptimizeSubmitButton() {
 <a id="tpl-use-pagination"></a>
 
 ## 6. usePagination 列表模板
+
+适用边界：
+
+- 适合局部列表组件自管分页状态。
+- 若分页结果需与页面其他区块联动，建议提升到 page/section hook 统一编排。
 
 ```tsx
 // page/history/components/history-list.tsx
@@ -197,6 +216,11 @@ export function HistoryList() {
 <a id="tpl-use-watcher"></a>
 
 ## 7. useWatcher 条件查询模板
+
+适用边界：
+
+- 适合局部条件查询和即时过滤组件。
+- 若查询结果是页面级共享数据源，应由 page/section hook 承担。
 
 ```tsx
 // page/models/components/model-search.tsx
@@ -450,5 +474,155 @@ export function useSettingsActions() {
     throw new Error("useSettingsActions must be used within SettingsProvider");
   }
   return value;
+}
+```
+
+<a id="tpl-page-content"></a>
+
+## 11. Page + Content 与内联选择模板
+
+选择规则：
+
+- 保留 `xxx-content`：当页面需要聚合多个区块并进行 props 映射/编排。
+- 直接内联到 `.page.tsx`：当仅有一层透传、无额外编排价值。
+
+```tsx
+// page/optimize/optimize.page.tsx (保留 content)
+import { useWorkbenchErrorHandler } from "@/lib/workbench-shell";
+import { OptimizeContent } from "./components/optimize-content";
+import { useOptimizePageState } from "./hooks/use-optimize-page-state";
+
+export function OptimizePage() {
+  const { handleRequestError } = useWorkbenchErrorHandler();
+  const { state, actions } = useOptimizePageState({
+    onRequestError: handleRequestError,
+  });
+
+  return <OptimizeContent state={state} actions={actions} />;
+}
+```
+
+```tsx
+// page/history/history.page.tsx (可内联)
+import { useWorkbenchErrorHandler } from "@/lib/workbench-shell";
+import { useWorkbenchShellStore } from "@/store";
+import { useHistoryPageState } from "./hooks/use-history-page-state";
+import { HistoryListPanel } from "./components/history-list-panel";
+
+export function HistoryPage() {
+  const historyRefreshToken = useWorkbenchShellStore(state => state.historyRefreshToken);
+  const { handleRequestError } = useWorkbenchErrorHandler();
+  const { state, actions } = useHistoryPageState({
+    refreshToken: historyRefreshToken,
+    onRequestError: handleRequestError,
+  });
+
+  return (
+    <HistoryListPanel
+      items={state.items}
+      filteredItems={state.filteredItems}
+      activeItemId={state.activeItemId}
+      nextCursor={state.nextCursor}
+      initialLoading={state.initialLoading}
+      loadingMore={state.loadingMore}
+      onSelectItem={actions.selectItem}
+      onCopyPrompt={actions.copyPrompt}
+      onLoadMore={actions.loadMore}
+    />
+  );
+}
+```
+
+<a id="tpl-large-hook-split"></a>
+
+## 12. 大 hook 拆分模板
+
+适用边界：
+
+- 单 hook `>180` 行，或异步动作 `>4`，或混合请求编排/校验/副作用时。
+
+```ts
+// page/optimize/hooks/use-optimize-page-state.ts
+import type { OptimizePageActions, OptimizePageState } from "../types";
+import { useOptimizeActions } from "./use-optimize-actions";
+import { useOptimizeResource } from "./use-optimize-resource";
+
+export function useOptimizePageState(): { state: OptimizePageState; actions: OptimizePageActions } {
+  const resource = useOptimizeResource();
+  const actions = useOptimizeActions(resource);
+
+  return {
+    state: resource.state,
+    actions,
+  };
+}
+```
+
+```ts
+// page/optimize/hooks/use-optimize-resource.ts
+export function useOptimizeResource() {
+  // 负责请求状态、共享数据、派生状态
+  return {
+    state: {
+      // ...
+    },
+    refs: {
+      // ...
+    },
+  };
+}
+```
+
+```ts
+// page/optimize/hooks/use-optimize-actions.ts
+export function useOptimizeActions(resource: {
+  state: Record<string, unknown>;
+  refs: Record<string, unknown>;
+}) {
+  // 负责动作、校验、通知、副作用
+  return {
+    // ...
+  };
+}
+```
+
+<a id="tpl-section-vm"></a>
+
+## 13. SectionVM 页面装配模板
+
+适用边界：
+
+- 页面由多个业务区块组成，且每个区块有独立状态与动作集合。
+
+```ts
+// page/models/types.ts
+export interface SectionVM<S, A> {
+  state: S;
+  actions: A;
+}
+```
+
+```tsx
+// page/demo/demo.page.tsx (示意)
+import type { SectionVM } from "./types";
+import { DemoContent } from "./components/demo-content";
+import { useSidebarSection } from "./hooks/use-sidebar-section";
+import { useSettingsSection } from "./hooks/use-settings-section";
+
+interface DemoSections {
+  sidebar: SectionVM<{ activeId: string | null }, { select: (id: string) => void }>;
+  settings: SectionVM<{ loading: boolean }, { save: () => Promise<void> }>;
+}
+
+export function DemoPage() {
+  const sidebar = useSidebarSection();
+  const settings = useSettingsSection({ activeId: sidebar.state.activeId });
+
+  const sections: DemoSections = {
+    sidebar,
+    settings,
+  };
+
+  return <DemoContent sections={sections} />;
 }
 ```

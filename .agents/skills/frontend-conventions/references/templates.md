@@ -20,30 +20,46 @@
 
 <a id="tpl-root-redirect"></a>
 
-## 1. 根路由重定向模板（`/ -> /optimize`）
+## 1. 根路由重定向模板（`/ -> /optimize | /login`）
 
 ```tsx
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { AuthLoadingScreen } from "@/components/auth-loading-screen";
 
 export const Route = createFileRoute("/")({
-  beforeLoad: () => {
-    throw redirect({ to: "/optimize" });
+  beforeLoad: ({ context }) => {
+    if (context.auth.isPending) {
+      return;
+    }
+
+    if (context.auth.isAuthenticated) {
+      throw redirect({ to: "/optimize" });
+    }
+
+    throw redirect({
+      to: "/login",
+      search: { redirect: "/optimize" },
+    });
   },
-  component: () => null,
+  component: AuthLoadingScreen,
 });
 ```
 
 <a id="tpl-thin-route"></a>
 
-## 2. 薄壳路由装配模板（Route -> Page）
+## 2. 薄壳路由装配模板（Pathless 父路由 + 子路由装配）
 
 ```tsx
-// routes/optimize.tsx
+// routes/_authenticated.tsx
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { OptimizePage } from "@/page/optimize";
+import { WorkbenchLayoutPage } from "@/page/workbench-layout";
 
-export const Route = createFileRoute("/optimize")({
+export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) => {
+    if (context.auth.isPending) {
+      return;
+    }
+
     if (!context.auth.isAuthenticated) {
       throw redirect({
         to: "/login",
@@ -51,16 +67,16 @@ export const Route = createFileRoute("/optimize")({
       });
     }
   },
-  component: OptimizePage,
+  component: WorkbenchLayoutPage,
 });
 ```
 
 ```tsx
-// routes/models.tsx
+// routes/_authenticated/models.tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { ModelsPage } from "@/page/models";
 
-export const Route = createFileRoute("/models")({
+export const Route = createFileRoute("/_authenticated/models")({
   component: ModelsPage,
 });
 ```

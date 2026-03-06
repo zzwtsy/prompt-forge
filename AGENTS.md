@@ -13,7 +13,7 @@ Treat generated files as build artifacts:
 
 - `apps/frontend/src/routeTree.gen.ts`
 - `apps/backend/src/db/migrations/*`
-- `apps/frontend/src/api`
+- `apps/frontend/src/api/*` (except `apps/frontend/src/api/index.ts`)
 
 ## Backend Task Entry Rule
 

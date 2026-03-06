@@ -1,14 +1,14 @@
 import type {
-  OptimizeControllerActions,
-  OptimizeControllerState,
+  OptimizePageActions,
+  OptimizePageState,
 } from "../types";
 import { EvaluationResultCard } from "./evaluation-result-card";
 import { OptimizeFormCard } from "./optimize-form-card";
 import { OptimizedResultCard } from "./optimized-result-card";
 
 interface OptimizeContentProps {
-  state: OptimizeControllerState;
-  actions: OptimizeControllerActions;
+  state: OptimizePageState;
+  actions: OptimizePageActions;
 }
 
 export function OptimizeContent(props: OptimizeContentProps) {

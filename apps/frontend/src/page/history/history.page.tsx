@@ -3,7 +3,7 @@ import { useWorkbenchShellStore } from "@/store";
 import { HistoryDetailPanel } from "./components/history-detail-panel";
 import { HistoryListPanel } from "./components/history-list-panel";
 import { HistoryToolbarCard } from "./components/history-toolbar-card";
-import { useHistoryController } from "./hooks/use-history-controller";
+import { useHistoryPageState } from "./hooks/use-history-page-state";
 
 export function HistoryPage() {
   const historyRefreshToken = useWorkbenchShellStore(state => state.historyRefreshToken);
@@ -11,7 +11,7 @@ export function HistoryPage() {
   const {
     state,
     actions,
-  } = useHistoryController({
+  } = useHistoryPageState({
     refreshToken: historyRefreshToken,
     onRequestError: handleRequestError,
   });

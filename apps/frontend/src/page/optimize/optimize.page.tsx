@@ -1,13 +1,13 @@
 import { useWorkbenchErrorHandler } from "@/lib/workbench-shell";
 import { OptimizeContent } from "./components/optimize-content";
-import { useOptimizeController } from "./hooks/use-optimize-controller";
+import { useOptimizePageState } from "./hooks/use-optimize-page-state";
 
 export function OptimizePage() {
   const { handleRequestError } = useWorkbenchErrorHandler();
   const {
     state,
     actions,
-  } = useOptimizeController({
+  } = useOptimizePageState({
     onRequestError: handleRequestError,
   });
 

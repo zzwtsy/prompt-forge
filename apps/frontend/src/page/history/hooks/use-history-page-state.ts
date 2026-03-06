@@ -1,7 +1,7 @@
 import type {
-  HistoryControllerActions,
-  HistoryControllerDeps,
-  HistoryControllerState,
+  HistoryPageActions,
+  HistoryPageDeps,
+  HistoryPageState,
 } from "../types";
 import type { SavedPromptItem } from "@/lib/workbench-api";
 import { useRequest } from "alova/client";
@@ -20,9 +20,9 @@ interface SavedPromptsPageData {
   nextCursor: string | null;
 }
 
-export function useHistoryController(deps: HistoryControllerDeps): {
-  state: HistoryControllerState;
-  actions: HistoryControllerActions;
+export function useHistoryPageState(deps: HistoryPageDeps): {
+  state: HistoryPageState;
+  actions: HistoryPageActions;
 } {
   const {
     refreshToken,

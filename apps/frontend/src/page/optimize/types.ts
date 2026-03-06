@@ -6,11 +6,11 @@ import type {
   OptimizeResolvedModel,
 } from "@/store";
 
-export interface OptimizeControllerDeps {
+export interface OptimizePageDeps {
   onRequestError: (error: unknown, options: RequestErrorOptions) => void;
 }
 
-export interface OptimizeControllerState {
+export interface OptimizePageState {
   prompt: string;
   evaluateModelId: string;
   optimizeModelId: string;
@@ -31,7 +31,7 @@ export interface OptimizeControllerState {
   isOptimizeDisabled: boolean;
 }
 
-export interface OptimizeControllerActions {
+export interface OptimizePageActions {
   setPrompt: (value: string) => void;
   setEvaluateModelId: (value: string) => void;
   setOptimizeModelId: (value: string) => void;

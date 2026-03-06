@@ -1,12 +1,12 @@
 import type { SavedPromptItem } from "@/lib/workbench-api";
 import type { RequestErrorOptions } from "@/lib/workbench-shell";
 
-export interface HistoryControllerDeps {
+export interface HistoryPageDeps {
   refreshToken: number;
   onRequestError: (error: unknown, options: RequestErrorOptions) => void;
 }
 
-export interface HistoryControllerState {
+export interface HistoryPageState {
   items: SavedPromptItem[];
   filteredItems: SavedPromptItem[];
   selectedItem: SavedPromptItem | null;
@@ -17,7 +17,7 @@ export interface HistoryControllerState {
   loadingMore: boolean;
 }
 
-export interface HistoryControllerActions {
+export interface HistoryPageActions {
   setSearchKeyword: (keyword: string) => void;
   selectItem: (itemId: string) => void;
   loadMore: () => Promise<void>;

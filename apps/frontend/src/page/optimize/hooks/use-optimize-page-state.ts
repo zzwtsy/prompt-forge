@@ -1,7 +1,7 @@
 import type {
-  OptimizeControllerActions,
-  OptimizeControllerDeps,
-  OptimizeControllerState,
+  OptimizePageActions,
+  OptimizePageDeps,
+  OptimizePageState,
 } from "../types";
 import type {
   EvaluateResponseData,
@@ -28,9 +28,9 @@ import {
 } from "@/store";
 import { parseOptionalFloat } from "../utils";
 
-export function useOptimizeController(deps: OptimizeControllerDeps): {
-  state: OptimizeControllerState;
-  actions: OptimizeControllerActions;
+export function useOptimizePageState(deps: OptimizePageDeps): {
+  state: OptimizePageState;
+  actions: OptimizePageActions;
 } {
   const { onRequestError } = deps;
   const notice = useWorkbenchToast();

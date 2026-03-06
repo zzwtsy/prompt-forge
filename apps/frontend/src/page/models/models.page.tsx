@@ -61,5 +61,6 @@ export function ModelsPage() {
     createModelDialog,
   };
 
+  // Keep Content as a container that assembles sections and maps page-level contracts.
   return <ModelsContent sections={sections} />;
 }

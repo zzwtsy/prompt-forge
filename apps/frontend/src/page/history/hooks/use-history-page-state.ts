@@ -49,12 +49,14 @@ export function useHistoryPageState(deps: HistoryPageDeps): {
 
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const loadHistoryRequestSeqRef = useRef(0);
 
   const loadHistory = useCallback(async (options: {
     reset: boolean;
     cursor?: string;
   }) => {
     const { reset, cursor } = options;
+    const requestId = ++loadHistoryRequestSeqRef.current;
 
     try {
       if (reset) {
@@ -68,6 +70,9 @@ export function useHistoryPageState(deps: HistoryPageDeps): {
         cursor,
       });
       const data = unwrapResponseData<SavedPromptsPageData>(response);
+      if (requestId !== loadHistoryRequestSeqRef.current) {
+        return;
+      }
 
       if (reset) {
         setItems(data.items);
@@ -78,12 +83,18 @@ export function useHistoryPageState(deps: HistoryPageDeps): {
 
       setNextCursor(data.nextCursor);
     } catch (error) {
+      if (requestId !== loadHistoryRequestSeqRef.current) {
+        return;
+      }
+
       onRequestError(error, {
         fallbackTitle: "加载历史记录失败",
       });
     } finally {
-      setInitialLoading(false);
-      setLoadingMore(false);
+      if (requestId === loadHistoryRequestSeqRef.current) {
+        setInitialLoading(false);
+        setLoadingMore(false);
+      }
     }
   }, [onRequestError]);
 

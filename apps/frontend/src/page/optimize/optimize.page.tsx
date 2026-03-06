@@ -11,5 +11,6 @@ export function OptimizePage() {
     onRequestError: handleRequestError,
   });
 
+  // Keep Content as a container for multi-block composition and state/action mapping.
   return <OptimizeContent state={state} actions={actions} />;
 }

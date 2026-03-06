@@ -48,6 +48,14 @@ Use TypeScript with strict settings enabled in both apps. ESLint (Antfu config) 
 
 Use `@/*` path aliases inside each app. Prefer kebab-case file names (for example, `app-not-found.ts`), and PascalCase for React component exports.
 
+## Commenting Conventions
+
+- Comments default to Chinese. Proper nouns, protocols, and API names may remain in English.
+- Comments focus on why, constraints, and side effects (`为什么/约束/副作用`). Do not write literal code translation comments.
+- Public functions, route handlers, core hooks, and core utility functions should include JSDoc.
+- TODO comments must follow: `TODO(责任人/日期): 原因 + 下一步`.
+- Enforcement applies to newly added or modified code (`新增/修改代码`). Legacy code is improved incrementally when touched.
+
 ## Testing Guidelines
 
 Backend tests use Vitest with files named `*.test.ts` under `apps/backend/src/` (example: `src/db/sqlite-path.test.ts`). Keep tests deterministic; backend tests run serially by default due to shared DB state. No frontend test runner is configured yet.

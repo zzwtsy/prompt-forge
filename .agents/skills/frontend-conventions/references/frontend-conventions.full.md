@@ -1,6 +1,6 @@
 # Frontend 开发规范
 
-- 版本：`v1.5`
+- 版本：`v1.6`
 - 同步日期：`2026-03-06`
 - 对齐基线：`apps/frontend` 当前技术栈（React 19 + TanStack Router + Alova + Tailwind v4 + shadcn/ui）
 
@@ -13,8 +13,9 @@
 - [4. 状态管理与会话保留规范](#full-state)
 - [5. React Context 规范](#full-context)
 - [6. 组件与样式规范](#full-ui)
-- [7. 质量门槛与验证命令](#full-quality)
-- [8. PR 与评审关注点](#full-review)
+- [7. 项目级注释规范](#full-comments)
+- [8. 质量门槛与验证命令](#full-quality)
+- [9. PR 与评审关注点](#full-review)
 
 <a id="full-positioning"></a>
 
@@ -295,9 +296,23 @@ src/
 - 动态反馈（提交结果、错误提示）应在必要时提供 `aria-live` 语义。
 - 表单控件应具备可关联标签（`label`/`htmlFor` 或等价语义）。
 
+<a id="full-comments"></a>
+
+## 7. 项目级注释规范
+
+统一约束：
+
+- 注释默认中文；专有名词、协议名与 API 名可保留英文。
+- 注释聚焦“为什么/约束/副作用”，不写代码字面翻译。
+- 新增/修改代码中的公开函数、页面编排 hook、核心工具函数使用 JSDoc。
+- 复杂分支允许短注释解释业务规则与状态约束。
+- TODO 统一格式：`TODO(责任人/日期): 原因 + 下一步`。
+- 注释规范仅强制新增/修改代码，历史代码按需渐进治理。
+- 禁止空话注释（例如“给变量赋值”“调用函数”）。
+
 <a id="full-quality"></a>
 
-## 7. 质量门槛与验证命令
+## 8. 质量门槛与验证命令
 
 基础门槛：
 
@@ -318,7 +333,7 @@ bun run build:frontend
 
 <a id="full-review"></a>
 
-## 8. PR 与评审关注点
+## 9. PR 与评审关注点
 
 评审优先级：
 
